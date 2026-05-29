@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Job Tracker</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Job Tracker</h1>
+      <span class="tagline">Applications · Recruiters · Cold Emails</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="jobs">Jobs</button>
+      <button class="tab-btn" data-tab="recruiters">Recruiters</button>
+      <button class="tab-btn" data-tab="email">Cold Email</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+    <div class="topbar-actions">
+      <button id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-label">Total</span><span class="stat-value" id="stat-total">0</span></div>
+        <div class="stat-card"><span class="stat-label">Wishlist</span><span class="stat-value" id="stat-wishlist">0</span></div>
+        <div class="stat-card"><span class="stat-label">Applied</span><span class="stat-value" id="stat-applied">0</span></div>
+        <div class="stat-card"><span class="stat-label">Screening</span><span class="stat-value" id="stat-screening">0</span></div>
+        <div class="stat-card"><span class="stat-label">Interview</span><span class="stat-value" id="stat-interview">0</span></div>
+        <div class="stat-card"><span class="stat-label">Offer</span><span class="stat-value" id="stat-offer">0</span></div>
+        <div class="stat-card"><span class="stat-label">Rejected</span><span class="stat-value" id="stat-rejected">0</span></div>
+        <div class="stat-card highlight"><span class="stat-label">Response Rate</span><span class="stat-value" id="stat-response">0%</span></div>
+      </div>
+
+      <div class="panel">
+        <h2>Pipeline</h2>
+        <div class="pipeline" id="pipeline"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Recent Activity</h2>
+        <ul id="activity" class="activity-list"></ul>
+      </div>
+    </section>
+
+    <!-- JOBS -->
+    <section id="tab-jobs" class="tab-panel">
+      <div class="toolbar">
+        <input type="search" id="jobSearch" placeholder="Search company, role, location..." />
+        <select id="filterStatus">
+          <option value="">All statuses</option>
+          <option>Wishlist</option>
+          <option>Applied</option>
+          <option>Screening</option>
+          <option>Interview</option>
+          <option>Offer</option>
+          <option>Rejected</option>
+        </select>
+        <select id="sortBy">
+          <option value="dateDesc">Newest first</option>
+          <option value="dateAsc">Oldest first</option>
+          <option value="company">Company A-Z</option>
+          <option value="status">Status</option>
+        </select>
+        <button class="btn-primary" id="openJobModal">+ Add Job</button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="jobsTable">
+          <thead>
+            <tr>
+              <th>Company</th><th>Role</th><th>Location</th><th>Salary</th>
+              <th>Status</th><th>Applied</th><th>Link</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="jobsEmpty">No jobs yet. Click <b>+ Add Job</b> to start tracking.</div>
+      </div>
+    </section>
+
+    <!-- RECRUITERS -->
+    <section id="tab-recruiters" class="tab-panel">
+      <div class="toolbar">
+        <input type="search" id="recSearch" placeholder="Search name, company, email..." />
+        <button class="btn-primary" id="openRecModal">+ Add Recruiter</button>
+      </div>
+      <div class="table-wrap">
+        <table id="recTable">
+          <thead>
+            <tr><th>Name</th><th>Company</th><th>Email</th><th>LinkedIn</th><th>Last Contact</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="recEmpty">No recruiters yet. Track who you've reached out to.</div>
+      </div>
+    </section>
+
+    <!-- COLD EMAIL -->
+    <section id="tab-email" class="tab-panel">
+      <div class="panel">
+        <h2>Cold Email Generator</h2>
+        <div class="email-grid">
+          <div class="email-form">
+            <label>Template
+              <select id="emailTemplate">
+                <option value="referral">Referral Request</option>
+                <option value="recruiter">Recruiter Intro</option>
+                <option value="followup">Application Follow-up</option>
+                <option value="postinterview">Post-Interview Thank You</option>
+                <option value="networking">Networking / Coffee Chat</option>
+              </select>
+            </label>
+            <label>Recruiter / Contact Name <input type="text" id="emRecName" placeholder="Jane Doe" /></label>
+            <label>Company <input type="text" id="emCompany" placeholder="Acme Corp" /></label>
+            <label>Role <input type="text" id="emRole" placeholder="Senior SDET" /></label>
+            <label>Your Name <input type="text" id="emYourName" placeholder="Atul Swain" /></label>
+            <label>Years of Experience <input type="text" id="emYears" placeholder="6" /></label>
+            <label>Key Skills / Strengths <input type="text" id="emSkills" placeholder="Selenium, API automation, CI/CD" /></label>
+            <label>LinkedIn / Portfolio URL <input type="text" id="emLink" placeholder="https://linkedin.com/in/..." /></label>
+            <button class="btn-primary" id="generateEmail">Generate</button>
+          </div>
+          <div class="email-output">
+            <label>Subject <input type="text" id="emSubject" readonly /></label>
+            <label>Body <textarea id="emBody" rows="18" readonly></textarea></label>
+            <div class="email-actions">
+              <button id="copySubject">Copy Subject</button>
+              <button id="copyBody">Copy Body</button>
+              <button id="copyAll">Copy Both</button>
+              <button id="openMail">Open in Mail Client</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="tab-panel">
+      <div class="panel">
+        <h2>Your Profile</h2>
+        <p class="muted">Used to auto-fill cold email templates.</p>
+        <div class="form-row">
+          <label>Name <input type="text" id="profName" /></label>
+          <label>Email <input type="text" id="profEmail" /></label>
+          <label>LinkedIn <input type="text" id="profLinkedin" /></label>
+          <label>Portfolio / GitHub <input type="text" id="profPortfolio" /></label>
+          <label>Years Experience <input type="text" id="profYears" /></label>
+          <label>Headline Skills <input type="text" id="profSkills" /></label>
+        </div>
+        <button class="btn-primary" id="saveProfile">Save Profile</button>
+      </div>
+
+      <div class="panel">
+        <h2>Backup & Restore</h2>
+        <p class="muted">All data lives in your browser (localStorage). Export regularly.</p>
+        <div class="btn-row">
+          <button id="exportData">Export JSON</button>
+          <button id="importBtn">Import JSON</button>
+          <input type="file" id="importFile" accept="application/json" hidden />
+          <button id="clearData" class="btn-danger">Clear All Data</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>About</h2>
+        <p class="muted">Static site. Works offline. Host on GitHub Pages.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- JOB MODAL -->
+  <div class="modal" id="jobModal" hidden>
+    <div class="modal-content">
+      <h3 id="jobModalTitle">Add Job</h3>
+      <div class="form-grid">
+        <label>Company* <input type="text" id="jCompany" /></label>
+        <label>Role* <input type="text" id="jRole" /></label>
+        <label>Location <input type="text" id="jLocation" placeholder="Remote / Bangalore" /></label>
+        <label>Salary <input type="text" id="jSalary" placeholder="₹30 LPA / $120k" /></label>
+        <label>Status
+          <select id="jStatus">
+            <option>Wishlist</option><option selected>Applied</option><option>Screening</option>
+            <option>Interview</option><option>Offer</option><option>Rejected</option>
+          </select>
+        </label>
+        <label>Date Applied <input type="date" id="jDate" /></label>
+        <label>Job URL <input type="url" id="jLink" placeholder="https://..." /></label>
+        <label>Source <input type="text" id="jSource" placeholder="LinkedIn / Referral / Company site" /></label>
+        <label class="full">Notes <textarea id="jNotes" rows="4"></textarea></label>
+        <label class="full">Next Step <input type="text" id="jNextStep" placeholder="Follow up on June 1" /></label>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelJob">Cancel</button>
+        <button class="btn-primary" id="saveJob">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECRUITER MODAL -->
+  <div class="modal" id="recModal" hidden>
+    <div class="modal-content">
+      <h3 id="recModalTitle">Add Recruiter</h3>
+      <div class="form-grid">
+        <label>Name* <input type="text" id="rName" /></label>
+        <label>Company <input type="text" id="rCompany" /></label>
+        <label>Email <input type="email" id="rEmail" /></label>
+        <label>LinkedIn URL <input type="url" id="rLinkedin" /></label>
+        <label>Phone <input type="text" id="rPhone" /></label>
+        <label>Status
+          <select id="rStatus">
+            <option>Not Contacted</option><option>Reached Out</option>
+            <option>Responded</option><option>In Discussion</option><option>Closed</option>
+          </select>
+        </label>
+        <label>Last Contact Date <input type="date" id="rDate" /></label>
+        <label class="full">Notes <textarea id="rNotes" rows="3"></textarea></label>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelRec">Cancel</button>
+        <button class="btn-primary" id="saveRec">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
