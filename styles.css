@@ -186,6 +186,7 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex; align-items: center; justify-content: center; z-index: 100;
   padding: 20px;
 }
+.modal[hidden] { display: none !important; }
 .modal-content {
   background: var(--panel); border-radius: 12px; padding: 24px;
   width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;

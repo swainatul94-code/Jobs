@@ -7,17 +7,91 @@ const STORAGE = {
 };
 
 const load = (k, def) => {
-  try { return JSON.parse(localStorage.getItem(k)) ?? def; }
-  catch { return def; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw == null) return def;
+    const parsed = JSON.parse(raw);
+    return parsed == null ? def : parsed;
+  } catch { return def; }
 };
-const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const save = (k, v) => {
+  try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+  catch (err) {
+    console.error('Storage write failed', err);
+    showToast(err && err.name === 'QuotaExceededError'
+      ? 'Storage full. Export and clear old data.'
+      : 'Could not save. Check browser storage settings.');
+    return false;
+  }
+};
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-let jobs = load(STORAGE.jobs, []);
-let recruiters = load(STORAGE.recruiters, []);
-let profile = load(STORAGE.profile, {
-  name: '', email: '', linkedin: '', portfolio: '', years: '', skills: ''
-});
+const DEFAULT_PROFILE = { name: '', email: '', linkedin: '', portfolio: '', years: '', skills: '' };
+
+let jobs = sanitizeJobList(load(STORAGE.jobs, []));
+let recruiters = sanitizeRecruiterList(load(STORAGE.recruiters, []));
+let profile = sanitizeProfile(load(STORAGE.profile, DEFAULT_PROFILE));
+
+// ========= VALIDATION =========
+const JOB_STATUSES = ['Wishlist', 'Applied', 'Screening', 'Interview', 'Offer', 'Rejected'];
+const REC_STATUSES = ['Not Contacted', 'Reached Out', 'Responded', 'In Discussion', 'Closed'];
+
+function sanitizeJobList(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(j => j && typeof j === 'object').map(j => ({
+    id: typeof j.id === 'string' ? j.id : uid(),
+    company: str(j.company),
+    role: str(j.role),
+    location: str(j.location),
+    salary: str(j.salary),
+    status: JOB_STATUSES.includes(j.status) ? j.status : 'Applied',
+    date: str(j.date).slice(0, 10),
+    link: safeUrl(j.link),
+    source: str(j.source),
+    notes: str(j.notes),
+    nextStep: str(j.nextStep),
+    createdAt: str(j.createdAt) || new Date().toISOString(),
+    updatedAt: str(j.updatedAt) || new Date().toISOString()
+  }));
+}
+
+function sanitizeRecruiterList(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(r => r && typeof r === 'object').map(r => ({
+    id: typeof r.id === 'string' ? r.id : uid(),
+    name: str(r.name),
+    company: str(r.company),
+    email: str(r.email),
+    linkedin: safeUrl(r.linkedin),
+    phone: str(r.phone),
+    status: REC_STATUSES.includes(r.status) ? r.status : 'Not Contacted',
+    date: str(r.date).slice(0, 10),
+    notes: str(r.notes),
+    createdAt: str(r.createdAt) || new Date().toISOString(),
+    updatedAt: str(r.updatedAt) || new Date().toISOString()
+  }));
+}
+
+function sanitizeProfile(p) {
+  if (!p || typeof p !== 'object') return { ...DEFAULT_PROFILE };
+  return {
+    name: str(p.name), email: str(p.email),
+    linkedin: safeUrl(p.linkedin), portfolio: safeUrl(p.portfolio),
+    years: str(p.years), skills: str(p.skills)
+  };
+}
+
+const str = v => (typeof v === 'string' ? v : '').slice(0, 2000);
+
+function safeUrl(u) {
+  if (typeof u !== 'string') return '';
+  const trimmed = u.trim();
+  if (!trimmed) return '';
+  if (trimmed.length > 2000) return '';
+  if (/^(https?|mailto):/i.test(trimmed)) return trimmed;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return '';
+  return 'https://' + trimmed;
+}
 
 // ========= TABS =========
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -32,8 +106,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ========= THEME =========
 const themeBtn = document.getElementById('themeToggle');
 const applyTheme = (t) => {
-  document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  const theme = t === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  themeBtn.textContent = theme === 'dark' ? '☀' : '☽';
 };
 applyTheme(load(STORAGE.theme, 'light'));
 themeBtn.addEventListener('click', () => {
@@ -45,93 +120,132 @@ themeBtn.addEventListener('click', () => {
 // ========= TOAST =========
 const toast = document.getElementById('toast');
 let toastTimer;
-const showToast = (msg) => {
-  toast.textContent = msg;
+function showToast(msg) {
+  toast.textContent = String(msg).slice(0, 200);
   toast.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.hidden = true, 2200);
-};
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 2200);
+}
+
+// ========= DATE =========
+function todayLocal() {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
 
 // ========= DASHBOARD =========
-const statusList = ['Wishlist', 'Applied', 'Screening', 'Interview', 'Offer', 'Rejected'];
-
 function renderDashboard() {
-  const counts = Object.fromEntries(statusList.map(s => [s, 0]));
+  const counts = Object.fromEntries(JOB_STATUSES.map(s => [s, 0]));
   jobs.forEach(j => { if (counts[j.status] != null) counts[j.status]++; });
 
-  document.getElementById('stat-total').textContent = jobs.length;
-  document.getElementById('stat-wishlist').textContent = counts.Wishlist;
-  document.getElementById('stat-applied').textContent = counts.Applied;
-  document.getElementById('stat-screening').textContent = counts.Screening;
-  document.getElementById('stat-interview').textContent = counts.Interview;
-  document.getElementById('stat-offer').textContent = counts.Offer;
-  document.getElementById('stat-rejected').textContent = counts.Rejected;
+  setText('stat-total', jobs.length);
+  setText('stat-wishlist', counts.Wishlist);
+  setText('stat-applied', counts.Applied);
+  setText('stat-screening', counts.Screening);
+  setText('stat-interview', counts.Interview);
+  setText('stat-offer', counts.Offer);
+  setText('stat-rejected', counts.Rejected);
 
   const applied = jobs.length - counts.Wishlist;
   const responded = counts.Screening + counts.Interview + counts.Offer + counts.Rejected;
   const rate = applied ? Math.round((responded / applied) * 100) : 0;
-  document.getElementById('stat-response').textContent = rate + '%';
+  setText('stat-response', rate + '%');
 
   const pipeline = document.getElementById('pipeline');
-  pipeline.innerHTML = statusList.map(s => {
+  pipeline.replaceChildren();
+  JOB_STATUSES.forEach(s => {
     const items = jobs.filter(j => j.status === s).slice(0, 4);
-    return `<div class="pipe-col">
-      <h4>${s}</h4>
-      <div class="pipe-count">${counts[s]}</div>
-      <ul>${items.map(j => `<li>${escapeHtml(j.company)} — ${escapeHtml(j.role)}</li>`).join('')}</ul>
-    </div>`;
-  }).join('');
+    const col = el('div', { class: 'pipe-col' }, [
+      el('h4', {}, s),
+      el('div', { class: 'pipe-count' }, String(counts[s])),
+      el('ul', {}, items.map(j => el('li', {}, `${j.company} — ${j.role}`)))
+    ]);
+    pipeline.appendChild(col);
+  });
 
   const activity = [...jobs]
     .sort((a, b) => new Date(b.updatedAt || b.date || 0) - new Date(a.updatedAt || a.date || 0))
     .slice(0, 8);
-  document.getElementById('activity').innerHTML = activity.length
-    ? activity.map(j => `<li>
-        <span><b>${escapeHtml(j.company)}</b> — ${escapeHtml(j.role)} <span class="badge ${slug(j.status)}">${j.status}</span></span>
-        <span class="act-date">${j.date || ''}</span>
-      </li>`).join('')
-    : '<li class="muted">No activity yet.</li>';
+  const actList = document.getElementById('activity');
+  actList.replaceChildren();
+  if (!activity.length) {
+    actList.appendChild(el('li', { class: 'muted' }, 'No activity yet.'));
+  } else {
+    activity.forEach(j => {
+      const left = el('span', {}, [
+        el('b', {}, j.company), ' — ', j.role, ' ',
+        el('span', { class: 'badge ' + slug(j.status) }, j.status)
+      ]);
+      const right = el('span', { class: 'act-date' }, j.date || '');
+      actList.appendChild(el('li', {}, [left, right]));
+    });
+  }
 }
+
+// ========= DOM HELPERS =========
+function el(tag, attrs = {}, children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') node.className = v;
+    else if (k === 'dataset') Object.assign(node.dataset, v);
+    else node.setAttribute(k, v);
+  }
+  appendChildren(node, children);
+  return node;
+}
+function appendChildren(node, children) {
+  if (children == null) return;
+  if (Array.isArray(children)) children.forEach(c => appendChildren(node, c));
+  else if (children instanceof Node) node.appendChild(children);
+  else node.appendChild(document.createTextNode(String(children)));
+}
+function setText(id, v) {
+  const n = document.getElementById(id);
+  if (n) n.textContent = String(v);
+}
+function slug(s) { return String(s || '').toLowerCase().replace(/\s+/g, '-'); }
 
 // ========= JOBS =========
 let editingJobId = null;
 const jobModal = document.getElementById('jobModal');
 
 document.getElementById('openJobModal').addEventListener('click', () => openJobModal());
-document.getElementById('cancelJob').addEventListener('click', () => jobModal.hidden = true);
+document.getElementById('cancelJob').addEventListener('click', () => closeModal(jobModal));
 document.getElementById('saveJob').addEventListener('click', saveJobHandler);
 
 function openJobModal(job = null) {
   editingJobId = job?.id || null;
   document.getElementById('jobModalTitle').textContent = job ? 'Edit Job' : 'Add Job';
-  document.getElementById('jCompany').value = job?.company || '';
-  document.getElementById('jRole').value = job?.role || '';
-  document.getElementById('jLocation').value = job?.location || '';
-  document.getElementById('jSalary').value = job?.salary || '';
-  document.getElementById('jStatus').value = job?.status || 'Applied';
-  document.getElementById('jDate').value = job?.date || new Date().toISOString().slice(0, 10);
-  document.getElementById('jLink').value = job?.link || '';
-  document.getElementById('jSource').value = job?.source || '';
-  document.getElementById('jNotes').value = job?.notes || '';
-  document.getElementById('jNextStep').value = job?.nextStep || '';
+  setVal('jCompany', job?.company || '');
+  setVal('jRole', job?.role || '');
+  setVal('jLocation', job?.location || '');
+  setVal('jSalary', job?.salary || '');
+  setVal('jStatus', job?.status || 'Applied');
+  setVal('jDate', job?.date || todayLocal());
+  setVal('jLink', job?.link || '');
+  setVal('jSource', job?.source || '');
+  setVal('jNotes', job?.notes || '');
+  setVal('jNextStep', job?.nextStep || '');
   jobModal.hidden = false;
 }
 
 function saveJobHandler() {
-  const company = document.getElementById('jCompany').value.trim();
-  const role = document.getElementById('jRole').value.trim();
+  const company = getVal('jCompany').trim();
+  const role = getVal('jRole').trim();
   if (!company || !role) { showToast('Company and Role required.'); return; }
 
   const data = {
     company, role,
-    location: document.getElementById('jLocation').value.trim(),
-    salary: document.getElementById('jSalary').value.trim(),
-    status: document.getElementById('jStatus').value,
-    date: document.getElementById('jDate').value,
-    link: document.getElementById('jLink').value.trim(),
-    source: document.getElementById('jSource').value.trim(),
-    notes: document.getElementById('jNotes').value.trim(),
-    nextStep: document.getElementById('jNextStep').value.trim(),
+    location: getVal('jLocation').trim(),
+    salary: getVal('jSalary').trim(),
+    status: JOB_STATUSES.includes(getVal('jStatus')) ? getVal('jStatus') : 'Applied',
+    date: getVal('jDate'),
+    link: safeUrl(getVal('jLink')),
+    source: getVal('jSource').trim(),
+    notes: getVal('jNotes').trim(),
+    nextStep: getVal('jNextStep').trim(),
     updatedAt: new Date().toISOString()
   };
 
@@ -142,7 +256,7 @@ function saveJobHandler() {
     jobs.push({ id: uid(), ...data, createdAt: new Date().toISOString() });
   }
   save(STORAGE.jobs, jobs);
-  jobModal.hidden = true;
+  closeModal(jobModal);
   renderJobs();
   renderDashboard();
   showToast(editingJobId ? 'Job updated.' : 'Job added.');
@@ -158,20 +272,20 @@ function deleteJob(id) {
 }
 
 function changeJobStatus(id, status) {
+  if (!JOB_STATUSES.includes(status)) return;
   const job = jobs.find(j => j.id === id);
   if (job) {
     job.status = status;
     job.updatedAt = new Date().toISOString();
     save(STORAGE.jobs, jobs);
-    renderJobs();
     renderDashboard();
   }
 }
 
 function renderJobs() {
-  const search = document.getElementById('jobSearch').value.toLowerCase().trim();
-  const status = document.getElementById('filterStatus').value;
-  const sortBy = document.getElementById('sortBy').value;
+  const search = getVal('jobSearch').toLowerCase().trim();
+  const status = getVal('filterStatus');
+  const sortBy = getVal('sortBy');
 
   let list = jobs.filter(j => {
     if (status && j.status !== status) return false;
@@ -190,36 +304,60 @@ function renderJobs() {
   });
 
   const tbody = document.querySelector('#jobsTable tbody');
-  tbody.innerHTML = list.map(j => `
-    <tr>
-      <td><b>${escapeHtml(j.company)}</b><br><small class="muted">${escapeHtml(j.source || '')}</small></td>
-      <td>${escapeHtml(j.role)}</td>
-      <td>${escapeHtml(j.location || '')}</td>
-      <td>${escapeHtml(j.salary || '')}</td>
-      <td>
-        <select onchange="changeJobStatus('${j.id}', this.value)" data-current="${j.status}">
-          ${statusList.map(s => `<option ${s === j.status ? 'selected' : ''}>${s}</option>`).join('')}
-        </select>
-      </td>
-      <td>${j.date || ''}</td>
-      <td>${j.link ? `<a href="${escapeAttr(j.link)}" target="_blank" rel="noopener">Open</a>` : ''}</td>
-      <td class="row-actions">
-        <button onclick="editJob('${j.id}')">Edit</button>
-        <button onclick="deleteJob('${j.id}')" class="btn-danger">Del</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.replaceChildren();
+  list.forEach(j => {
+    const statusSel = el('select', { dataset: { action: 'job-status', id: j.id } },
+      JOB_STATUSES.map(s => {
+        const opt = el('option', {}, s);
+        if (s === j.status) opt.selected = true;
+        return opt;
+      })
+    );
+    const linkCell = el('td', {});
+    if (j.link) {
+      linkCell.appendChild(el('a', { href: j.link, target: '_blank', rel: 'noopener noreferrer' }, 'Open'));
+    }
+    const companyCell = el('td', {}, [
+      el('b', {}, j.company),
+      j.source ? el('br') : null,
+      j.source ? el('small', { class: 'muted' }, j.source) : null
+    ]);
+    const actions = el('td', { class: 'row-actions' }, [
+      el('button', { dataset: { action: 'edit-job', id: j.id } }, 'Edit'),
+      el('button', { class: 'btn-danger', dataset: { action: 'delete-job', id: j.id } }, 'Del')
+    ]);
+    tbody.appendChild(el('tr', {}, [
+      companyCell,
+      el('td', {}, j.role),
+      el('td', {}, j.location || ''),
+      el('td', {}, j.salary || ''),
+      el('td', {}, statusSel),
+      el('td', {}, j.date || ''),
+      linkCell,
+      actions
+    ]));
+  });
 
   document.getElementById('jobsEmpty').style.display = list.length ? 'none' : 'block';
   document.getElementById('jobsTable').style.display = list.length ? '' : 'none';
 }
 
-window.editJob = (id) => {
-  const j = jobs.find(x => x.id === id);
-  if (j) openJobModal(j);
-};
-window.deleteJob = deleteJob;
-window.changeJobStatus = changeJobStatus;
+document.getElementById('jobsTable').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'edit-job') {
+    const j = jobs.find(x => x.id === id);
+    if (j) openJobModal(j);
+  } else if (btn.dataset.action === 'delete-job') {
+    deleteJob(id);
+  }
+});
+document.getElementById('jobsTable').addEventListener('change', (e) => {
+  const sel = e.target.closest('[data-action="job-status"]');
+  if (!sel) return;
+  changeJobStatus(sel.dataset.id, sel.value);
+});
 
 document.getElementById('jobSearch').addEventListener('input', renderJobs);
 document.getElementById('filterStatus').addEventListener('change', renderJobs);
@@ -230,35 +368,39 @@ let editingRecId = null;
 const recModal = document.getElementById('recModal');
 
 document.getElementById('openRecModal').addEventListener('click', () => openRecModal());
-document.getElementById('cancelRec').addEventListener('click', () => recModal.hidden = true);
+document.getElementById('cancelRec').addEventListener('click', () => closeModal(recModal));
 document.getElementById('saveRec').addEventListener('click', saveRecHandler);
 
 function openRecModal(rec = null) {
   editingRecId = rec?.id || null;
   document.getElementById('recModalTitle').textContent = rec ? 'Edit Recruiter' : 'Add Recruiter';
-  document.getElementById('rName').value = rec?.name || '';
-  document.getElementById('rCompany').value = rec?.company || '';
-  document.getElementById('rEmail').value = rec?.email || '';
-  document.getElementById('rLinkedin').value = rec?.linkedin || '';
-  document.getElementById('rPhone').value = rec?.phone || '';
-  document.getElementById('rStatus').value = rec?.status || 'Not Contacted';
-  document.getElementById('rDate').value = rec?.date || '';
-  document.getElementById('rNotes').value = rec?.notes || '';
+  setVal('rName', rec?.name || '');
+  setVal('rCompany', rec?.company || '');
+  setVal('rEmail', rec?.email || '');
+  setVal('rLinkedin', rec?.linkedin || '');
+  setVal('rPhone', rec?.phone || '');
+  setVal('rStatus', rec?.status || 'Not Contacted');
+  setVal('rDate', rec?.date || '');
+  setVal('rNotes', rec?.notes || '');
   recModal.hidden = false;
 }
 
 function saveRecHandler() {
-  const name = document.getElementById('rName').value.trim();
+  const name = getVal('rName').trim();
   if (!name) { showToast('Name required.'); return; }
+  const email = getVal('rEmail').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('Invalid email.'); return;
+  }
   const data = {
     name,
-    company: document.getElementById('rCompany').value.trim(),
-    email: document.getElementById('rEmail').value.trim(),
-    linkedin: document.getElementById('rLinkedin').value.trim(),
-    phone: document.getElementById('rPhone').value.trim(),
-    status: document.getElementById('rStatus').value,
-    date: document.getElementById('rDate').value,
-    notes: document.getElementById('rNotes').value.trim(),
+    company: getVal('rCompany').trim(),
+    email,
+    linkedin: safeUrl(getVal('rLinkedin')),
+    phone: getVal('rPhone').trim(),
+    status: REC_STATUSES.includes(getVal('rStatus')) ? getVal('rStatus') : 'Not Contacted',
+    date: getVal('rDate'),
+    notes: getVal('rNotes').trim(),
     updatedAt: new Date().toISOString()
   };
   if (editingRecId) {
@@ -268,7 +410,7 @@ function saveRecHandler() {
     recruiters.push({ id: uid(), ...data, createdAt: new Date().toISOString() });
   }
   save(STORAGE.recruiters, recruiters);
-  recModal.hidden = true;
+  closeModal(recModal);
   renderRecruiters();
   showToast(editingRecId ? 'Recruiter updated.' : 'Recruiter added.');
 }
@@ -282,7 +424,7 @@ function deleteRec(id) {
 }
 
 function renderRecruiters() {
-  const search = document.getElementById('recSearch').value.toLowerCase().trim();
+  const search = getVal('recSearch').toLowerCase().trim();
   let list = recruiters.filter(r => {
     if (!search) return true;
     return [r.name, r.company, r.email, r.notes].join(' ').toLowerCase().includes(search);
@@ -290,38 +432,54 @@ function renderRecruiters() {
   list.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
 
   const tbody = document.querySelector('#recTable tbody');
-  tbody.innerHTML = list.map(r => `
-    <tr>
-      <td><b>${escapeHtml(r.name)}</b>${r.phone ? `<br><small class="muted">${escapeHtml(r.phone)}</small>` : ''}</td>
-      <td>${escapeHtml(r.company || '')}</td>
-      <td>${r.email ? `<a href="mailto:${escapeAttr(r.email)}">${escapeHtml(r.email)}</a>` : ''}</td>
-      <td>${r.linkedin ? `<a href="${escapeAttr(r.linkedin)}" target="_blank" rel="noopener">Profile</a>` : ''}</td>
-      <td>${r.date || ''}</td>
-      <td><span class="badge ${slug(r.status)}">${r.status}</span></td>
-      <td class="row-actions">
-        <button onclick="emailRecruiter('${r.id}')">Email</button>
-        <button onclick="editRec('${r.id}')">Edit</button>
-        <button onclick="deleteRec('${r.id}')" class="btn-danger">Del</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.replaceChildren();
+  list.forEach(r => {
+    const emailCell = el('td', {});
+    if (r.email) emailCell.appendChild(el('a', { href: 'mailto:' + r.email }, r.email));
+    const liCell = el('td', {});
+    if (r.linkedin) liCell.appendChild(el('a', { href: r.linkedin, target: '_blank', rel: 'noopener noreferrer' }, 'Profile'));
+    const nameCell = el('td', {}, [
+      el('b', {}, r.name),
+      r.phone ? el('br') : null,
+      r.phone ? el('small', { class: 'muted' }, r.phone) : null
+    ]);
+    const actions = el('td', { class: 'row-actions' }, [
+      el('button', { dataset: { action: 'email-rec', id: r.id } }, 'Email'),
+      el('button', { dataset: { action: 'edit-rec', id: r.id } }, 'Edit'),
+      el('button', { class: 'btn-danger', dataset: { action: 'delete-rec', id: r.id } }, 'Del')
+    ]);
+    tbody.appendChild(el('tr', {}, [
+      nameCell,
+      el('td', {}, r.company || ''),
+      emailCell,
+      liCell,
+      el('td', {}, r.date || ''),
+      el('td', {}, el('span', { class: 'badge ' + slug(r.status) }, r.status)),
+      actions
+    ]));
+  });
   document.getElementById('recEmpty').style.display = list.length ? 'none' : 'block';
   document.getElementById('recTable').style.display = list.length ? '' : 'none';
 }
 
-window.editRec = (id) => {
-  const r = recruiters.find(x => x.id === id);
-  if (r) openRecModal(r);
-};
-window.deleteRec = deleteRec;
-window.emailRecruiter = (id) => {
-  const r = recruiters.find(x => x.id === id);
-  if (!r) return;
-  document.querySelector('[data-tab="email"]').click();
-  document.getElementById('emRecName').value = r.name;
-  document.getElementById('emCompany').value = r.company || '';
-  generateEmailContent();
-};
+document.getElementById('recTable').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'edit-rec') {
+    const r = recruiters.find(x => x.id === id);
+    if (r) openRecModal(r);
+  } else if (btn.dataset.action === 'delete-rec') {
+    deleteRec(id);
+  } else if (btn.dataset.action === 'email-rec') {
+    const r = recruiters.find(x => x.id === id);
+    if (!r) return;
+    document.querySelector('[data-tab="email"]').click();
+    setVal('emRecName', r.name);
+    setVal('emCompany', r.company || '');
+    generateEmailContent();
+  }
+});
 
 document.getElementById('recSearch').addEventListener('input', renderRecruiters);
 
@@ -407,63 +565,65 @@ ${d.yourName || '[Your Name]'}`
 };
 
 function generateEmailContent() {
+  const tplKey = getVal('emailTemplate');
+  if (!templates[tplKey]) return;
   const d = {
-    recName: document.getElementById('emRecName').value.trim(),
-    company: document.getElementById('emCompany').value.trim(),
-    role: document.getElementById('emRole').value.trim(),
-    yourName: document.getElementById('emYourName').value.trim() || profile.name,
-    years: document.getElementById('emYears').value.trim() || profile.years,
-    skills: document.getElementById('emSkills').value.trim() || profile.skills,
-    link: document.getElementById('emLink').value.trim() || profile.linkedin || profile.portfolio
+    recName: getVal('emRecName').trim(),
+    company: getVal('emCompany').trim(),
+    role: getVal('emRole').trim(),
+    yourName: getVal('emYourName').trim() || profile.name,
+    years: getVal('emYears').trim() || profile.years,
+    skills: getVal('emSkills').trim() || profile.skills,
+    link: getVal('emLink').trim() || profile.linkedin || profile.portfolio
   };
-  const tpl = templates[document.getElementById('emailTemplate').value](d);
-  document.getElementById('emSubject').value = tpl.subject;
-  document.getElementById('emBody').value = tpl.body;
+  const tpl = templates[tplKey](d);
+  setVal('emSubject', tpl.subject);
+  setVal('emBody', tpl.body);
 }
 
 document.getElementById('generateEmail').addEventListener('click', generateEmailContent);
 
 const copy = async (text, label) => {
   try { await navigator.clipboard.writeText(text); showToast(label + ' copied.'); }
-  catch { showToast('Copy failed.'); }
+  catch { showToast('Copy failed. Select and copy manually.'); }
 };
-document.getElementById('copySubject').addEventListener('click', () => copy(document.getElementById('emSubject').value, 'Subject'));
-document.getElementById('copyBody').addEventListener('click', () => copy(document.getElementById('emBody').value, 'Body'));
+document.getElementById('copySubject').addEventListener('click', () => copy(getVal('emSubject'), 'Subject'));
+document.getElementById('copyBody').addEventListener('click', () => copy(getVal('emBody'), 'Body'));
 document.getElementById('copyAll').addEventListener('click', () => {
-  const s = document.getElementById('emSubject').value;
-  const b = document.getElementById('emBody').value;
-  copy(`Subject: ${s}\n\n${b}`, 'Email');
+  copy(`Subject: ${getVal('emSubject')}\n\n${getVal('emBody')}`, 'Email');
 });
 document.getElementById('openMail').addEventListener('click', () => {
-  const s = encodeURIComponent(document.getElementById('emSubject').value);
-  const b = encodeURIComponent(document.getElementById('emBody').value);
-  window.location.href = `mailto:?subject=${s}&body=${b}`;
+  const s = encodeURIComponent(getVal('emSubject'));
+  const b = encodeURIComponent(getVal('emBody'));
+  const a = document.createElement('a');
+  a.href = `mailto:?subject=${s}&body=${b}`;
+  a.click();
 });
 
 // ========= PROFILE =========
 function loadProfileForm() {
-  document.getElementById('profName').value = profile.name || '';
-  document.getElementById('profEmail').value = profile.email || '';
-  document.getElementById('profLinkedin').value = profile.linkedin || '';
-  document.getElementById('profPortfolio').value = profile.portfolio || '';
-  document.getElementById('profYears').value = profile.years || '';
-  document.getElementById('profSkills').value = profile.skills || '';
+  setVal('profName', profile.name);
+  setVal('profEmail', profile.email);
+  setVal('profLinkedin', profile.linkedin);
+  setVal('profPortfolio', profile.portfolio);
+  setVal('profYears', profile.years);
+  setVal('profSkills', profile.skills);
 
-  document.getElementById('emYourName').value = profile.name || '';
-  document.getElementById('emYears').value = profile.years || '';
-  document.getElementById('emSkills').value = profile.skills || '';
-  document.getElementById('emLink').value = profile.linkedin || profile.portfolio || '';
+  setVal('emYourName', profile.name);
+  setVal('emYears', profile.years);
+  setVal('emSkills', profile.skills);
+  setVal('emLink', profile.linkedin || profile.portfolio);
 }
 
 document.getElementById('saveProfile').addEventListener('click', () => {
-  profile = {
-    name: document.getElementById('profName').value.trim(),
-    email: document.getElementById('profEmail').value.trim(),
-    linkedin: document.getElementById('profLinkedin').value.trim(),
-    portfolio: document.getElementById('profPortfolio').value.trim(),
-    years: document.getElementById('profYears').value.trim(),
-    skills: document.getElementById('profSkills').value.trim()
-  };
+  profile = sanitizeProfile({
+    name: getVal('profName').trim(),
+    email: getVal('profEmail').trim(),
+    linkedin: getVal('profLinkedin').trim(),
+    portfolio: getVal('profPortfolio').trim(),
+    years: getVal('profYears').trim(),
+    skills: getVal('profSkills').trim()
+  });
   save(STORAGE.profile, profile);
   loadProfileForm();
   showToast('Profile saved.');
@@ -471,27 +631,36 @@ document.getElementById('saveProfile').addEventListener('click', () => {
 
 // ========= BACKUP =========
 document.getElementById('exportData').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ jobs, recruiters, profile, exportedAt: new Date().toISOString() }, null, 2)],
-    { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `job-tracker-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Exported.');
+  try {
+    const blob = new Blob(
+      [JSON.stringify({ version: 1, jobs, recruiters, profile, exportedAt: new Date().toISOString() }, null, 2)],
+      { type: 'application/json' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `job-tracker-${todayLocal()}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Exported.');
+  } catch {
+    showToast('Export failed.');
+  }
 });
 
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('File too large (max 10MB).'); e.target.value = ''; return; }
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    if (data.jobs) jobs = data.jobs;
-    if (data.recruiters) recruiters = data.recruiters;
-    if (data.profile) profile = data.profile;
+    if (!data || typeof data !== 'object') throw new Error('bad shape');
+    if (!confirm('Import will REPLACE all current data. Continue?')) { e.target.value = ''; return; }
+    if (Array.isArray(data.jobs)) jobs = sanitizeJobList(data.jobs);
+    if (Array.isArray(data.recruiters)) recruiters = sanitizeRecruiterList(data.recruiters);
+    if (data.profile && typeof data.profile === 'object') profile = sanitizeProfile(data.profile);
     save(STORAGE.jobs, jobs);
     save(STORAGE.recruiters, recruiters);
     save(STORAGE.profile, profile);
@@ -500,7 +669,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
     renderRecruiters();
     renderDashboard();
     showToast('Imported.');
-  } catch (err) {
+  } catch {
     showToast('Invalid file.');
   }
   e.target.value = '';
@@ -509,7 +678,9 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 document.getElementById('clearData').addEventListener('click', () => {
   if (!confirm('This will delete ALL jobs, recruiters, and profile data. Continue?')) return;
   if (!confirm('Are you sure? This cannot be undone.')) return;
-  jobs = []; recruiters = []; profile = { name: '', email: '', linkedin: '', portfolio: '', years: '', skills: '' };
+  jobs = [];
+  recruiters = [];
+  profile = { ...DEFAULT_PROFILE };
   save(STORAGE.jobs, jobs);
   save(STORAGE.recruiters, recruiters);
   save(STORAGE.profile, profile);
@@ -520,12 +691,27 @@ document.getElementById('clearData').addEventListener('click', () => {
   showToast('All data cleared.');
 });
 
-// ========= UTIL =========
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// ========= MODAL CLOSE =========
+function closeModal(m) { m.hidden = true; }
+[jobModal, recModal].forEach(m => {
+  m.addEventListener('click', (e) => { if (e.target === m) closeModal(m); });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!jobModal.hidden) closeModal(jobModal);
+    if (!recModal.hidden) closeModal(recModal);
+  }
+});
+
+// ========= INPUT HELPERS =========
+function getVal(id) {
+  const n = document.getElementById(id);
+  return n ? n.value : '';
 }
-function escapeAttr(s) { return escapeHtml(s); }
-function slug(s) { return String(s || '').toLowerCase().replace(/\s+/g, '-'); }
+function setVal(id, v) {
+  const n = document.getElementById(id);
+  if (n) n.value = v == null ? '' : v;
+}
 
 // ========= INIT =========
 loadProfileForm();
