@@ -28,10 +28,6 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 
 const DEFAULT_PROFILE = { name: '', email: '', linkedin: '', portfolio: '', years: '', skills: '' };
 
-let jobs = sanitizeJobList(load(STORAGE.jobs, []));
-let recruiters = sanitizeRecruiterList(load(STORAGE.recruiters, []));
-let profile = sanitizeProfile(load(STORAGE.profile, DEFAULT_PROFILE));
-
 // ========= VALIDATION =========
 const JOB_STATUSES = ['Wishlist', 'Applied', 'Screening', 'Interview', 'Offer', 'Rejected'];
 const REC_STATUSES = ['Not Contacted', 'Reached Out', 'Responded', 'In Discussion', 'Closed'];
@@ -92,6 +88,11 @@ function safeUrl(u) {
   if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return '';
   return 'https://' + trimmed;
 }
+
+// ========= LOAD DATA (after validators/consts above are initialized) =========
+let jobs = sanitizeJobList(load(STORAGE.jobs, []));
+let recruiters = sanitizeRecruiterList(load(STORAGE.recruiters, []));
+let profile = sanitizeProfile(load(STORAGE.profile, DEFAULT_PROFILE));
 
 // ========= TABS =========
 document.querySelectorAll('.tab-btn').forEach(btn => {

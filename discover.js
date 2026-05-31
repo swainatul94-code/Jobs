@@ -128,10 +128,10 @@
       }));
     },
 
-    async jobicy(q) {
-      const url = 'https://jobicy.com/api/v2/remote-jobs?count=100' +
-        (q ? '&tag=' + encodeURIComponent(q) : '');
-      const data = await fetchJSON(url);
+    async jobicy() {
+      // Jobicy's ?tag= only accepts its own controlled vocabulary and 400s on
+      // free text, so fetch broadly and let the shared client filter narrow it.
+      const data = await fetchJSON('https://jobicy.com/api/v2/remote-jobs?count=100');
       return (data && Array.isArray(data.jobs) ? data.jobs : []).map((j) => ({
         source: 'Jobicy',
         title: j.jobTitle,
