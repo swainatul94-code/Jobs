@@ -310,6 +310,7 @@ tbody tr:last-child td { border-bottom: none; }
 .badge.jobicy { background: #ffe4e6; color: #9f1239; }
 .badge.greenhouse { background: #dcfce7; color: #166534; }
 .badge.lever { background: #e0e7ff; color: #3730a3; }
+.badge.adzuna { background: #cffafe; color: #155e75; }
 
 /* RESPONSIVE */
 @media (max-width: 900px) {

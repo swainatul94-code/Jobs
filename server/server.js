@@ -21,10 +21,20 @@ const multer = require('multer');
   } catch { /* no .env file is fine */ }
 })();
 
+const crypto = require('crypto');
+
 const ROOT = path.join(__dirname, '..');
 const PORT = Number(process.env.PORT) || 5500;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+
+// Shared access password that gates the cost-bearing endpoints (AI / resume /
+// keyed job sources). When set, the deployed app requires it so a stranger who
+// finds the public URL cannot burn your API credits. Unset = open (dev only).
+const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
+const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || '';
+const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || '';
+const ADZUNA_READY = !!(ADZUNA_APP_ID && ADZUNA_APP_KEY);
 
 // Per-task model routing for cost control. AI_MODEL sets the global default
 // (cheapest sensible model); override any single task via its own env var —
@@ -38,8 +48,48 @@ const MODELS = {
 };
 
 const app = express();
+app.set('trust proxy', true); // behind Render/Fly/Cloudflare — needed for real req.ip
 app.use(express.json({ limit: '1mb' }));
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
+
+// Minimal security headers (frame-ancestors moved here since meta ignores it).
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// --- per-IP rate limiter (in-memory; fine for a single small instance) ---
+function rateLimiter({ windowMs, max }) {
+  const hits = new Map();
+  return (req, res, next) => {
+    const now = Date.now();
+    if (hits.size > 5000) hits.clear(); // crude cap against unbounded growth
+    const ip = req.ip || 'unknown';
+    let rec = hits.get(ip);
+    if (!rec || now > rec.reset) { rec = { count: 0, reset: now + windowMs }; hits.set(ip, rec); }
+    rec.count++;
+    if (rec.count > max) {
+      const retry = Math.ceil((rec.reset - now) / 1000);
+      res.setHeader('Retry-After', String(retry));
+      return res.status(429).json({ error: 'Rate limit exceeded — retry in ' + retry + 's.' });
+    }
+    next();
+  };
+}
+
+// --- access gate (constant-time compare) ---
+function requireAccess(req, res, next) {
+  if (!ACCESS_PASSWORD) return next(); // open if no password configured
+  const given = req.get('x-access-password') || '';
+  const a = Buffer.from(given);
+  const b = Buffer.from(ACCESS_PASSWORD);
+  if (a.length === b.length && crypto.timingSafeEqual(a, b)) return next();
+  return res.status(401).json({ error: 'unauthorized' });
+}
+
+const guard = [rateLimiter({ windowMs: 5 * 60 * 1000, max: 40 }), requireAccess];
 
 // ---------- Anthropic helper ----------
 // Content-block builders. cached() marks a block for prompt caching so the
@@ -88,6 +138,7 @@ async function callClaude({ model, system, messages, maxTokens = 1024 }) {
 function extractJSON(text) {
   if (!text) return null;
   let t = text.replace(/```json|```/gi, '').trim();
+  try { return JSON.parse(t); } catch { /* fall back to brace scan below */ }
   const first = t.search(/[[{]/);
   if (first < 0) return null;
   // find matching close by scanning
@@ -115,7 +166,58 @@ function profileLine(p) {
 
 // ---------- routes ----------
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
-app.get('/api/ai/health', (_req, res) => res.json({ ok: true, ai: !!ANTHROPIC_KEY, model: DEFAULT_MODEL, models: MODELS }));
+// Public config so the client knows what to enable / whether a password is required.
+app.get('/api/ai/health', (_req, res) => res.json({
+  ok: true,
+  ai: !!ANTHROPIC_KEY,
+  model: DEFAULT_MODEL,
+  models: MODELS,
+  auth: !!ACCESS_PASSWORD,
+  sources: { adzuna: ADZUNA_READY }
+}));
+
+// Everything below the guard requires the access password (when one is set)
+// and is rate-limited per IP.
+app.use('/api/ai', guard);
+app.use('/api/resume', guard);
+app.use('/api/jobs', guard);
+
+// Adzuna proxy (AU + global, salary data). Key stays server-side.
+app.get('/api/jobs/adzuna', async (req, res) => {
+  try {
+    if (!ADZUNA_READY) return res.status(503).json({ error: 'Adzuna not configured (set ADZUNA_APP_ID and ADZUNA_APP_KEY).' });
+    const country = (req.query.country || 'au').toString().toLowerCase().replace(/[^a-z]/g, '').slice(0, 2) || 'au';
+    const params = new URLSearchParams({
+      app_id: ADZUNA_APP_ID,
+      app_key: ADZUNA_APP_KEY,
+      results_per_page: '50',
+      what: str(req.query.what, 120),
+      where: str(req.query.where, 120),
+      'content-type': 'application/json'
+    });
+    const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/1?` + params.toString();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    let data;
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      data = await r.json().catch(() => ({}));
+      if (!r.ok) return res.status(502).json({ error: (data && data.exception) || ('Adzuna HTTP ' + r.status) });
+    } finally { clearTimeout(timer); }
+    const jobs = (data.results || []).map((j) => ({
+      source: 'Adzuna',
+      title: j.title,
+      company: j.company && j.company.display_name,
+      location: j.location && j.location.display_name,
+      salary: (j.salary_min || j.salary_max) ? ('$' + Math.round(j.salary_min || j.salary_max).toLocaleString()) : '',
+      tags: (j.category && j.category.label) ? [j.category.label] : [],
+      url: j.redirect_url,
+      date: j.created,
+      desc: str(j.description, 2000)
+    }));
+    res.json({ jobs });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
 
 // Rank/score a batch of jobs against the user profile.
 app.post('/api/ai/rank', async (req, res) => {
@@ -268,5 +370,9 @@ app.listen(PORT, () => {
     console.log('AI: enabled — rank=' + MODELS.rank + ' insight=' + MODELS.insight + ' email=' + MODELS.email + ' resume=' + MODELS.resume);
   } else {
     console.log('AI: DISABLED — set ANTHROPIC_API_KEY in .env');
+  }
+  console.log('Adzuna: ' + (ADZUNA_READY ? 'enabled' : 'off (set ADZUNA_APP_ID/ADZUNA_APP_KEY)'));
+  if (ANTHROPIC_KEY && !ACCESS_PASSWORD) {
+    console.warn('WARNING: AI endpoints are OPEN (no ACCESS_PASSWORD). Anyone with the URL can spend your API credits. Set ACCESS_PASSWORD.');
   }
 });

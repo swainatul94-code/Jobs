@@ -21,7 +21,8 @@
     arbeitnow: 'Arbeitnow',
     jobicy: 'Jobicy',
     greenhouse: 'Greenhouse',
-    lever: 'Lever'
+    lever: 'Lever',
+    adzuna: 'Adzuna'
   };
 
   // ---- AI refs + state (backend at /api/ai/*) ----
@@ -32,8 +33,34 @@
   const AI = { available: false, model: '' };
   let lastResults = [];
 
+  const ACCESS_KEY = 'jt_access';
+  function getToken() { try { return localStorage.getItem(ACCESS_KEY) || ''; } catch { return ''; } }
+  function setToken(v) { try { localStorage.setItem(ACCESS_KEY, v); } catch { /* ignore */ } }
+
+  // fetch wrapper that attaches the access password and, on a 401 'unauthorized',
+  // prompts for it once and retries. Shared with resume.js via window.JT_aiFetch.
+  async function aiFetch(url, options) {
+    options = options || {};
+    const run = () => {
+      const headers = Object.assign({}, options.headers);
+      const tok = getToken();
+      if (tok) headers['x-access-password'] = tok;
+      return fetch(url, Object.assign({}, options, { headers }));
+    };
+    let res = await run();
+    if (res.status === 401) {
+      const data = await res.clone().json().catch(() => ({}));
+      if (data && data.error === 'unauthorized') {
+        const pw = window.prompt('This server is password-protected. Enter the access password:');
+        if (pw) { setToken(pw); res = await run(); }
+      }
+    }
+    return res;
+  }
+  window.JT_aiFetch = aiFetch;
+
   async function postJSON(url, body) {
-    const res = await fetch(url, {
+    const res = await aiFetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body)
@@ -49,11 +76,20 @@
   }
 
   async function checkAI() {
+    let d = null;
     try {
-      const d = await (await fetch('/api/ai/health')).json();
+      d = await (await fetch('/api/ai/health')).json();
       AI.available = !!(d && d.ai);
       AI.model = (d && d.model) || '';
     } catch { AI.available = false; }
+    // Reveal the Adzuna source only when the backend has its key.
+    const adzunaToggle = document.getElementById('adzunaToggle');
+    if (adzunaToggle) {
+      const on = !!(d && d.sources && d.sources.adzuna);
+      adzunaToggle.hidden = !on;
+      const cb = adzunaToggle.querySelector('input');
+      if (cb) cb.checked = on;
+    }
     if (dRankBtn) dRankBtn.hidden = !AI.available;
     if (aiEmailBtn) aiEmailBtn.hidden = !AI.available;
     if (aiHint) {
@@ -197,6 +233,25 @@
         url: j.absolute_url,
         date: j.updated_at,
         desc: stripHtml(j.content)
+      }));
+    },
+
+    // Adzuna goes through our backend proxy (key stays server-side). Covers AU.
+    async adzuna(q, loc) {
+      const params = new URLSearchParams({ country: 'au', what: q || '', where: loc || '' });
+      const res = await aiFetch('/api/jobs/adzuna?' + params.toString());
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      return (data.jobs || []).map((j) => ({
+        source: 'Adzuna',
+        title: j.title,
+        company: j.company,
+        location: j.location,
+        salary: j.salary || '',
+        tags: asArray(j.tags),
+        url: j.url,
+        date: j.date,
+        desc: stripHtml(j.desc)
       }));
     },
 
@@ -511,7 +566,7 @@
     const enabled = [...document.querySelectorAll('.source-toggles input[data-source]')]
       .filter((c) => c.checked).map((c) => c.dataset.source);
 
-    const tasks = enabled.map((s) => ({ name: SOURCE_LABEL[s], run: () => ADAPTERS[s](q) }));
+    const tasks = enabled.map((s) => ({ name: SOURCE_LABEL[s], run: () => ADAPTERS[s](q, loc) }));
 
     const ats = (document.querySelector('input[name="ats"]:checked') || {}).value || '';
     const slugVal = dCompanySlug.value.trim();

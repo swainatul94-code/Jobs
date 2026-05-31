@@ -55,7 +55,8 @@
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/resume/extract', { method: 'POST', body: fd });
+      const f = window.JT_aiFetch || fetch;
+      const res = await f('/api/resume/extract', { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
       resumeText.value = data.text || '';
@@ -78,7 +79,8 @@
     try {
       const aiProfile = (typeof profile === 'object' && profile)
         ? { name: profile.name, years: profile.years, skills: profile.skills } : {};
-      const res = await fetch('/api/ai/resume', {
+      const f = window.JT_aiFetch || fetch;
+      const res = await f('/api/ai/resume', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ resume, jd, profile: aiProfile })
