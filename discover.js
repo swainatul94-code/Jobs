@@ -83,13 +83,13 @@
       AI.available = !!(d && d.ai);
       AI.model = (d && d.model) || '';
     } catch { AI.available = false; }
-    // Reveal keyed sources only when the backend has their keys.
+    // Reveal keyed sources only when the backend has their keys. Leave them
+    // UNCHECKED (opt-in) so each capped/quota'd key is only spent when you ask.
     const revealSource = (toggleId, on) => {
       const t = document.getElementById(toggleId);
       if (!t) return;
       t.hidden = !on;
-      const cb = t.querySelector('input');
-      if (cb) cb.checked = on;
+      if (!on) { const cb = t.querySelector('input'); if (cb) cb.checked = false; }
     };
     revealSource('adzunaToggle', !!(d && d.sources && d.sources.adzuna));
     revealSource('joobleToggle', !!(d && d.sources && d.sources.jooble));
