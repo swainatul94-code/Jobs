@@ -24,6 +24,45 @@
     lever: 'Lever'
   };
 
+  // ---- AI refs + state (backend at /api/ai/*) ----
+  const dRankBtn = $('dRank');
+  const dFeedBtn = $('dFeed');
+  const aiHint = $('aiHint');
+  const aiEmailBtn = $('aiEmail');
+  const AI = { available: false, model: '' };
+  let lastResults = [];
+
+  async function postJSON(url, body) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    return data;
+  }
+
+  function aiProfile() {
+    const p = (typeof profile === 'object' && profile) ? profile : {};
+    return { name: p.name, years: p.years, skills: p.skills };
+  }
+
+  async function checkAI() {
+    try {
+      const d = await (await fetch('/api/ai/health')).json();
+      AI.available = !!(d && d.ai);
+      AI.model = (d && d.model) || '';
+    } catch { AI.available = false; }
+    if (dRankBtn) dRankBtn.hidden = !AI.available;
+    if (aiEmailBtn) aiEmailBtn.hidden = !AI.available;
+    if (aiHint) {
+      aiHint.textContent = AI.available
+        ? 'AI ready · ' + AI.model
+        : 'AI off — run the backend with an ANTHROPIC_API_KEY to enable ranking, tailoring & insight.';
+    }
+  }
+
   // ---- helpers ----
   async function fetchJSON(url, timeout = 12000) {
     const ctrl = new AbortController();
@@ -281,17 +320,146 @@
       else saveBtn.addEventListener('click', () => saveResult(r, saveBtn));
       actions.push(saveBtn);
 
+      const insightBox = el('div', { class: 'r-insight' });
+      if (AI.available && r.desc) {
+        const insBtn = el('button', { class: 'btn-ai-sm' }, '✨ Insight');
+        insBtn.addEventListener('click', () => loadInsight(r, insBtn, insightBox));
+        actions.push(insBtn);
+      }
+
+      const headChildren = [
+        el('h3', { class: 'r-title' }, r.title || '(untitled)'),
+        el('span', { class: 'r-source badge ' + slug(r.source) }, r.source)
+      ];
+      if (typeof r._score === 'number') {
+        headChildren.splice(1, 0, el('span', { class: 'fit-badge ' + fitClass(r._score) }, r._score + '% fit'));
+      }
+
       dResults.appendChild(el('div', { class: 'result-card' }, [
-        el('div', { class: 'r-head' }, [
-          el('h3', { class: 'r-title' }, r.title || '(untitled)'),
-          el('span', { class: 'r-source badge ' + slug(r.source) }, r.source)
-        ]),
+        el('div', { class: 'r-head' }, headChildren),
+        r._reason ? el('div', { class: 'r-reason' }, '★ ' + r._reason) : null,
         el('div', { class: 'r-meta' }, meta),
         tags.length ? el('div', { class: 'r-tags' }, tags) : null,
         r.desc ? el('p', { class: 'r-desc' }, truncate(r.desc, 220)) : null,
-        el('div', { class: 'r-actions' }, actions)
+        el('div', { class: 'r-actions' }, actions),
+        insightBox
       ]));
     });
+  }
+
+  function fitClass(s) { return s >= 75 ? 'fit-high' : s >= 45 ? 'fit-mid' : 'fit-low'; }
+
+  // ---- AI: rank current results by fit ----
+  async function rankByFit() {
+    if (!lastResults.length) { showToast('Run a search first.'); return; }
+    dRankBtn.disabled = true;
+    const orig = dRankBtn.textContent;
+    dRankBtn.textContent = 'Ranking…';
+    try {
+      const jobs = lastResults.slice(0, 30).map((j) => ({
+        title: j.title, company: j.company, location: j.location, desc: j.desc
+      }));
+      const { rankings } = await postJSON('/api/ai/rank', { profile: aiProfile(), jobs });
+      (rankings || []).forEach((rk) => {
+        const t = lastResults[rk.i];
+        if (t) { t._score = rk.score; t._reason = rk.reason; }
+      });
+      lastResults.sort((a, b) => (b._score || 0) - (a._score || 0));
+      renderResults(lastResults);
+      showToast('Ranked by fit.');
+    } catch (e) {
+      showToast('Rank failed: ' + e.message);
+    } finally {
+      dRankBtn.disabled = false;
+      dRankBtn.textContent = orig;
+    }
+  }
+
+  // ---- AI: per-job insight ----
+  async function loadInsight(r, btn, box) {
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = 'Analyzing…';
+    try {
+      const ins = await postJSON('/api/ai/insight', {
+        job: { title: r.title, company: r.company, location: r.location, desc: r.desc }
+      });
+      box.replaceChildren();
+      const meta = [ins.seniority && 'Seniority: ' + ins.seniority, ins.salaryHint && 'Salary: ' + ins.salaryHint]
+        .filter(Boolean).join(' · ');
+      if (meta) box.appendChild(el('div', { class: 'ins-meta' }, meta));
+      const section = (title, items, cls) => {
+        if (!items || !items.length) return;
+        box.appendChild(el('div', { class: 'ins-sec ' + cls }, [
+          el('b', {}, title),
+          el('ul', {}, items.map((x) => el('li', {}, x)))
+        ]));
+      };
+      section('Must-haves', ins.mustHaves, 'ins-must');
+      section('Requirements', ins.requirements, 'ins-req');
+      section('Red flags', ins.redFlags, 'ins-flag');
+      if (!box.childNodes.length) box.appendChild(el('div', { class: 'muted' }, 'No insight extracted.'));
+    } catch (e) {
+      box.replaceChildren(el('div', { class: 'st-fail' }, 'Insight failed: ' + e.message));
+    } finally {
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  }
+
+  // ---- Daily feed (written by the scheduled fetch) ----
+  async function loadFeed() {
+    dFeedBtn.disabled = true;
+    setStatus(el('span', {}, 'Loading daily picks…'));
+    try {
+      const res = await fetch('data/jobs-feed.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('no feed yet');
+      const feed = await res.json();
+      const jobs = Array.isArray(feed.jobs) ? feed.jobs : [];
+      lastResults = jobs;
+      setStatus(el('div', { class: 'status-line' }, [
+        el('b', {}, jobs.length + ' daily pick' + (jobs.length === 1 ? '' : 's')),
+        el('span', { class: 'muted' }, ' for “' + (feed.query || '') + '” · updated ' + fmtDate(feed.generatedAt))
+      ]));
+      renderResults(jobs);
+    } catch {
+      setStatus(el('span', { class: 'st-warn' }, 'No daily feed yet. It appears after the “Daily job fetch” GitHub Action runs (or run it manually from the Actions tab).'));
+      dResults.replaceChildren();
+    } finally {
+      dFeedBtn.disabled = false;
+    }
+  }
+
+  // ---- AI: tailor a cold email on the Email tab ----
+  async function tailorEmail() {
+    const kindSel = $('emailTemplate');
+    const job = {
+      title: ($('emRole') || {}).value || '',
+      company: ($('emCompany') || {}).value || '',
+      location: '',
+      desc: ''
+    };
+    if (!job.title && !job.company) { showToast('Add a role/company first.'); return; }
+    aiEmailBtn.disabled = true;
+    const orig = aiEmailBtn.textContent;
+    aiEmailBtn.textContent = 'Writing…';
+    try {
+      const out = await postJSON('/api/ai/email', {
+        kind: kindSel ? kindSel.value : 'cold outreach',
+        recipient: ($('emRecName') || {}).value || '',
+        profile: aiProfile(),
+        job
+      });
+      const subj = $('emSubject'); const bodyEl = $('emBody');
+      if (subj) subj.value = out.subject || '';
+      if (bodyEl) bodyEl.value = out.body || '';
+      showToast('AI draft ready.');
+    } catch (e) {
+      showToast('Tailor failed: ' + e.message);
+    } finally {
+      aiEmailBtn.textContent = orig;
+      aiEmailBtn.disabled = false;
+    }
   }
 
   function setStatus(node) {
@@ -373,6 +541,7 @@
       relaxedNote ? el('div', { class: 'relaxed-note muted' }, relaxedNote) : null
     ]);
     setStatus(statusWrap);
+    lastResults = capped;
     renderResults(capped);
 
     searching = false;
@@ -385,4 +554,9 @@
   [dQuery, dLocation, dCompanySlug].forEach((inp) => {
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
   });
+  if (dRankBtn) dRankBtn.addEventListener('click', rankByFit);
+  if (dFeedBtn) dFeedBtn.addEventListener('click', loadFeed);
+  if (aiEmailBtn) aiEmailBtn.addEventListener('click', tailorEmail);
+
+  checkAI();
 })();

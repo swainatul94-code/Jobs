@@ -81,6 +81,12 @@
           <input type="text" id="dCompanySlug" class="slug-input" placeholder="company slug — e.g. stripe, atlassian" />
         </fieldset>
 
+        <div class="discover-actions">
+          <button id="dRank" class="btn-ai" hidden>✨ Rank by fit (AI)</button>
+          <button id="dFeed">Daily picks</button>
+          <span id="aiHint" class="muted"></span>
+        </div>
+
         <div id="dStatus" class="discover-status" aria-live="polite"></div>
       </div>
 
@@ -168,6 +174,7 @@
             <label>Subject <input type="text" id="emSubject" readonly /></label>
             <label>Body <textarea id="emBody" rows="18" readonly></textarea></label>
             <div class="email-actions">
+              <button id="aiEmail" class="btn-ai" hidden>✨ AI Tailor</button>
               <button id="copySubject">Copy Subject</button>
               <button id="copyBody">Copy Body</button>
               <button id="copyAll">Copy Both</button>

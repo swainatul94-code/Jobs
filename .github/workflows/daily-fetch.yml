@@ -1,0 +1,43 @@
+name: Daily job fetch
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC daily
+  workflow_dispatch:        # allow manual run from the Actions tab
+    inputs:
+      query:
+        description: 'Search keywords'
+        required: false
+        default: 'qa automation'
+      location:
+        description: 'Location filter (optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Fetch jobs
+        env:
+          FETCH_QUERY: ${{ github.event.inputs.query || 'qa automation' }}
+          FETCH_LOCATION: ${{ github.event.inputs.location || '' }}
+        run: node server/fetch-jobs.js
+      - name: Commit feed if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/jobs-feed.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "chore: update daily job feed [skip ci]"
+            git push
+          fi

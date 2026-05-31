@@ -1,0 +1,15 @@
+{
+  "name": "job-tracker",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Job tracking portal with live multi-source search and AI assist (fit ranking, tailored outreach, JD insight).",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "fetch-jobs": "node server/fetch-jobs.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
