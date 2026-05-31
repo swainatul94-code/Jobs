@@ -1,0 +1,23 @@
+# Fly.io config. Change `app` to a unique name (or let `fly launch` set it).
+# The key is NOT here — set it with:  fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+app = "job-tracker-CHANGEME"
+primary_region = "syd"   # pick a region near you: syd, sin, iad, fra, ...
+
+[build]
+
+[env]
+  AI_MODEL = "claude-haiku-4-5-20251001"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  method = "GET"
+  path = "/api/health"
+  interval = "30s"
+  timeout = "5s"

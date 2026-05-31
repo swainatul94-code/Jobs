@@ -1,0 +1,18 @@
+# Render Blueprint. In Render: New + -> Blueprint -> pick this repo.
+# The key is NOT stored here — sync:false makes Render ask for it in the
+# dashboard and keep it as an encrypted secret.
+services:
+  - type: web
+    name: job-tracker
+    runtime: node
+    plan: free
+    autoDeploy: true            # redeploy on every push to main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY  # set the value in the Render dashboard (secret)
+        sync: false
+      - key: AI_MODEL
+        value: claude-haiku-4-5-20251001
+      # PORT is provided by Render automatically; server.js reads process.env.PORT
