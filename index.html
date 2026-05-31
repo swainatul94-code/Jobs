@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'self'; frame-ancestors 'none';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; connect-src 'self' https://remotive.com https://remoteok.com https://www.arbeitnow.com https://jobicy.com https://boards-api.greenhouse.io https://api.lever.co; form-action 'none'; base-uri 'self'; frame-ancestors 'none';" />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <title>Job Tracker</title>
 <link rel="stylesheet" href="styles.css" />
@@ -16,6 +16,7 @@
     </div>
     <nav class="tabs">
       <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="discover">Find Jobs</button>
       <button class="tab-btn" data-tab="jobs">Jobs</button>
       <button class="tab-btn" data-tab="recruiters">Recruiters</button>
       <button class="tab-btn" data-tab="email">Cold Email</button>
@@ -49,6 +50,40 @@
         <h2>Recent Activity</h2>
         <ul id="activity" class="activity-list"></ul>
       </div>
+    </section>
+
+    <!-- DISCOVER / FIND JOBS -->
+    <section id="tab-discover" class="tab-panel">
+      <div class="panel">
+        <h2>Find Jobs</h2>
+        <p class="muted">Search live openings from public job boards. Click <b>Save</b> on any result to add it to your tracker (status: Wishlist).</p>
+
+        <div class="discover-search">
+          <input type="search" id="dQuery" placeholder="Keywords — e.g. SDET, QA automation, backend" />
+          <input type="search" id="dLocation" placeholder="Location filter (optional) — e.g. remote, India" />
+          <button class="btn-primary" id="dSearch">Search</button>
+        </div>
+
+        <fieldset class="source-toggles">
+          <legend>Remote boards</legend>
+          <label class="chk"><input type="checkbox" data-source="remotive" checked /> Remotive</label>
+          <label class="chk"><input type="checkbox" data-source="remoteok" checked /> RemoteOK</label>
+          <label class="chk"><input type="checkbox" data-source="arbeitnow" checked /> Arbeitnow</label>
+          <label class="chk"><input type="checkbox" data-source="jobicy" checked /> Jobicy</label>
+        </fieldset>
+
+        <fieldset class="source-toggles">
+          <legend>Company board (optional)</legend>
+          <label class="chk"><input type="radio" name="ats" value="" checked /> Off</label>
+          <label class="chk"><input type="radio" name="ats" value="greenhouse" /> Greenhouse</label>
+          <label class="chk"><input type="radio" name="ats" value="lever" /> Lever</label>
+          <input type="text" id="dCompanySlug" class="slug-input" placeholder="company slug — e.g. stripe, atlassian" />
+        </fieldset>
+
+        <div id="dStatus" class="discover-status" aria-live="polite"></div>
+      </div>
+
+      <div id="dResults" class="discover-results"></div>
     </section>
 
     <!-- JOBS -->
@@ -233,5 +268,6 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="app.js"></script>
+  <script src="discover.js"></script>
 </body>
 </html>
