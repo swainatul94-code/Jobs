@@ -22,6 +22,7 @@
       <button class="tab-btn" data-tab="recruiters">Recruiters</button>
       <button class="tab-btn" data-tab="email">Cold Email</button>
       <button class="tab-btn" data-tab="resume">Resume</button>
+      <button class="tab-btn" data-tab="interview">Interview</button>
       <button class="tab-btn" data-tab="settings">Settings</button>
     </nav>
     <div class="topbar-actions">
@@ -49,6 +50,11 @@
       </div>
 
       <div class="panel">
+        <h2>Follow-ups due</h2>
+        <ul id="followups" class="activity-list"></ul>
+      </div>
+
+      <div class="panel">
         <h2>Recent Activity</h2>
         <ul id="activity" class="activity-list"></ul>
       </div>
@@ -73,6 +79,7 @@
           <label class="chk"><input type="checkbox" data-source="arbeitnow" checked /> Arbeitnow</label>
           <label class="chk"><input type="checkbox" data-source="jobicy" checked /> Jobicy</label>
           <label class="chk" id="adzunaToggle" hidden><input type="checkbox" data-source="adzuna" /> Adzuna (AU/global)</label>
+          <label class="chk" id="joobleToggle" hidden><input type="checkbox" data-source="jooble" /> Jooble</label>
         </fieldset>
 
         <fieldset class="source-toggles">
@@ -223,6 +230,40 @@
           <button id="printTailored">Print / Save PDF</button>
         </div>
       </div>
+
+      <div class="panel">
+        <h2>Cover Letter</h2>
+        <p class="muted">Uses your master resume + the job description above.</p>
+        <div class="btn-row">
+          <button id="coverBtn" class="btn-ai" hidden>✨ Generate cover letter</button>
+          <span id="coverHint" class="muted"></span>
+        </div>
+        <label class="full">Cover letter
+          <textarea id="coverText" rows="14" placeholder="Generated cover letter appears here — editable."></textarea>
+        </label>
+        <div class="btn-row">
+          <button id="copyCover">Copy</button>
+          <button id="dlCoverMd">Download .md</button>
+          <button id="dlCoverDoc">Download .doc</button>
+          <button id="printCover">Print / Save PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERVIEW PREP -->
+    <section id="tab-interview" class="tab-panel">
+      <div class="panel">
+        <h2>Interview Prep</h2>
+        <p class="muted">Paste a JD (or click <b>Apply</b> on a job, then come here). AI generates likely questions + prep tips tuned to your profile.</p>
+        <label class="full">Job description
+          <textarea id="ivJD" rows="8" placeholder="Paste the job description here..."></textarea>
+        </label>
+        <div class="btn-row">
+          <button id="ivBtn" class="btn-ai" hidden>✨ Generate interview prep</button>
+          <span id="ivHint" class="muted"></span>
+        </div>
+        <div id="ivOutput" class="iv-output"></div>
+      </div>
     </section>
 
     <!-- SETTINGS -->
@@ -278,6 +319,7 @@
         <label>Job URL <input type="url" id="jLink" placeholder="https://..." /></label>
         <label>Source <input type="text" id="jSource" placeholder="LinkedIn / Referral / Company site" /></label>
         <label class="full">Notes <textarea id="jNotes" rows="4"></textarea></label>
+        <label>Follow-up date <input type="date" id="jFollowUp" /></label>
         <label class="full">Next Step <input type="text" id="jNextStep" placeholder="Follow up on June 1" /></label>
       </div>
       <div class="modal-actions">
@@ -318,5 +360,6 @@
   <script src="app.js"></script>
   <script src="discover.js"></script>
   <script src="resume.js"></script>
+  <script src="interview.js"></script>
 </body>
 </html>

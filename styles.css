@@ -24,6 +24,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* author display rules must not override the hidden attribute */
 html, body { margin: 0; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -311,6 +312,21 @@ tbody tr:last-child td { border-bottom: none; }
 .badge.greenhouse { background: #dcfce7; color: #166534; }
 .badge.lever { background: #e0e7ff; color: #3730a3; }
 .badge.adzuna { background: #cffafe; color: #155e75; }
+.badge.jooble { background: #fae8ff; color: #86198f; }
+
+/* INTERVIEW PREP */
+.iv-output { margin-top: 8px; }
+.iv-output h3 { font-size: 14px; margin: 16px 0 8px; }
+.iv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.iv-chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.iv-qlist { margin: 0; padding-left: 20px; }
+.iv-qlist li { margin-bottom: 12px; }
+.iv-q { font-weight: 600; }
+.iv-tip { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* FOLLOW-UPS */
+.fu-over { color: var(--danger); font-weight: 700; }
+.fu-up { color: var(--muted); }
 
 /* RESPONSIVE */
 @media (max-width: 900px) {

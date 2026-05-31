@@ -22,7 +22,8 @@
     jobicy: 'Jobicy',
     greenhouse: 'Greenhouse',
     lever: 'Lever',
-    adzuna: 'Adzuna'
+    adzuna: 'Adzuna',
+    jooble: 'Jooble'
   };
 
   // ---- AI refs + state (backend at /api/ai/*) ----
@@ -82,14 +83,16 @@
       AI.available = !!(d && d.ai);
       AI.model = (d && d.model) || '';
     } catch { AI.available = false; }
-    // Reveal the Adzuna source only when the backend has its key.
-    const adzunaToggle = document.getElementById('adzunaToggle');
-    if (adzunaToggle) {
-      const on = !!(d && d.sources && d.sources.adzuna);
-      adzunaToggle.hidden = !on;
-      const cb = adzunaToggle.querySelector('input');
+    // Reveal keyed sources only when the backend has their keys.
+    const revealSource = (toggleId, on) => {
+      const t = document.getElementById(toggleId);
+      if (!t) return;
+      t.hidden = !on;
+      const cb = t.querySelector('input');
       if (cb) cb.checked = on;
-    }
+    };
+    revealSource('adzunaToggle', !!(d && d.sources && d.sources.adzuna));
+    revealSource('joobleToggle', !!(d && d.sources && d.sources.jooble));
     if (dRankBtn) dRankBtn.hidden = !AI.available;
     if (aiEmailBtn) aiEmailBtn.hidden = !AI.available;
     if (aiHint) {
@@ -244,6 +247,25 @@
       if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
       return (data.jobs || []).map((j) => ({
         source: 'Adzuna',
+        title: j.title,
+        company: j.company,
+        location: j.location,
+        salary: j.salary || '',
+        tags: asArray(j.tags),
+        url: j.url,
+        date: j.date,
+        desc: stripHtml(j.desc)
+      }));
+    },
+
+    // Jooble via backend proxy (key server-side). Broad coverage incl. AU/India.
+    async jooble(q, loc) {
+      const params = new URLSearchParams({ what: q || '', where: loc || '' });
+      const res = await aiFetch('/api/jobs/jooble?' + params.toString());
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      return (data.jobs || []).map((j) => ({
+        source: 'Jooble',
         title: j.title,
         company: j.company,
         location: j.location,

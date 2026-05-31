@@ -15,6 +15,9 @@
   const tailorBtn = $('tailorBtn');
   const tailorHint = $('tailorHint');
   const resumeMeta = $('resumeMeta');
+  const coverText = $('coverText');
+  const coverBtn = $('coverBtn');
+  const coverHint = $('coverHint');
 
   // ---- load stored master resume ----
   try {
@@ -41,10 +44,12 @@
     let ai = false, model = '';
     try { const d = await (await fetch('/api/ai/health')).json(); ai = !!(d && d.ai); model = (d && d.model) || ''; }
     catch { ai = false; }
+    const hint = ai ? 'AI ready · ' + model
+      : 'AI off — start the backend with an ANTHROPIC_API_KEY to enable this.';
     tailorBtn.hidden = !ai;
-    tailorHint.textContent = ai
-      ? 'AI ready · ' + model
-      : 'AI off — start the backend with an ANTHROPIC_API_KEY to tailor resumes.';
+    tailorHint.textContent = hint;
+    if (coverBtn) coverBtn.hidden = !ai;
+    if (coverHint) coverHint.textContent = hint;
   }
 
   // ---- upload + extract ----
@@ -98,6 +103,35 @@
     }
   }
 
+  // ---- AI cover letter (uses master resume + the JD box above) ----
+  async function generateCover() {
+    const resume = (resumeText.value || '').trim();
+    const jd = (jdText.value || '').trim();
+    if (!jd) { showToast('Paste a job description first.'); jdText.focus(); return; }
+    coverBtn.disabled = true;
+    const orig = coverBtn.textContent;
+    coverBtn.textContent = 'Writing…';
+    try {
+      const aiProfile = (typeof profile === 'object' && profile)
+        ? { name: profile.name, years: profile.years, skills: profile.skills } : {};
+      const f = window.JT_aiFetch || fetch;
+      const res = await f('/api/ai/cover-letter', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ resume, jd, profile: aiProfile, job: {} })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      coverText.value = data.letter || '';
+      showToast('Cover letter ready — review & download.');
+    } catch (e) {
+      showToast('Cover letter failed: ' + e.message);
+    } finally {
+      coverBtn.textContent = orig;
+      coverBtn.disabled = false;
+    }
+  }
+
   // ---- markdown -> html (for .doc export and print) ----
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const inline = (s) => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*]+?)\*/g, '$1<em>$2</em>');
@@ -146,6 +180,11 @@
     if (!t) { showToast('Tailor a resume first.'); return null; }
     return t;
   }
+  function requireFilled(elm, what) {
+    const t = (elm.value || '').trim();
+    if (!t) { showToast('Generate the ' + what + ' first.'); return null; }
+    return t;
+  }
 
   // ---- wire up ----
   $('resumeUploadBtn').addEventListener('click', () => fileInput.click());
@@ -174,13 +213,37 @@
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   });
 
+  // cover letter export
+  coverBtn.addEventListener('click', generateCover);
+  $('copyCover').addEventListener('click', async () => {
+    const t = requireFilled(coverText, 'cover letter'); if (!t) return;
+    try { await navigator.clipboard.writeText(t); showToast('Copied.'); } catch { showToast('Copy failed.'); }
+  });
+  $('dlCoverMd').addEventListener('click', () => {
+    const t = requireFilled(coverText, 'cover letter'); if (!t) return;
+    downloadBlob(t, 'text/markdown', 'cover-letter-' + todayLocal() + '.md');
+  });
+  $('dlCoverDoc').addEventListener('click', () => {
+    const t = requireFilled(coverText, 'cover letter'); if (!t) return;
+    downloadBlob(fullHtml(mdToHtml(t)), 'application/msword', 'cover-letter-' + todayLocal() + '.doc');
+  });
+  $('printCover').addEventListener('click', () => {
+    const t = requireFilled(coverText, 'cover letter'); if (!t) return;
+    const html = fullHtml(mdToHtml(t) + '<script>window.onload=function(){window.print()}<\/script>');
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  });
+
   // ---- bridge: let Apply buttons elsewhere load a JD here ----
   window.JT_loadJD = function (jd, label) {
     const btn = document.querySelector('[data-tab="resume"]');
     if (btn) btn.click();
     jdText.value = jd || '';
     jdSource.textContent = label ? '— ' + label : '';
-    if (jd) showToast('JD loaded — tailor your resume below.');
+    const iv = document.getElementById('ivJD');
+    if (iv) iv.value = jd || ''; // also seed Interview Prep
+    if (jd) showToast('JD loaded — tailor, write a cover letter, or prep interview.');
     jdText.focus();
   };
 

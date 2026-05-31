@@ -35,6 +35,8 @@ const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
 const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID || '';
 const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY || '';
 const ADZUNA_READY = !!(ADZUNA_APP_ID && ADZUNA_APP_KEY);
+const JOOBLE_KEY = process.env.JOOBLE_KEY || '';
+const JOOBLE_READY = !!JOOBLE_KEY;
 
 // Per-task model routing for cost control. AI_MODEL sets the global default
 // (cheapest sensible model); override any single task via its own env var —
@@ -44,7 +46,9 @@ const MODELS = {
   rank: process.env.AI_MODEL_RANK || DEFAULT_MODEL,
   insight: process.env.AI_MODEL_INSIGHT || DEFAULT_MODEL,
   email: process.env.AI_MODEL_EMAIL || DEFAULT_MODEL,
-  resume: process.env.AI_MODEL_RESUME || DEFAULT_MODEL
+  resume: process.env.AI_MODEL_RESUME || DEFAULT_MODEL,
+  cover: process.env.AI_MODEL_COVER || DEFAULT_MODEL,
+  interview: process.env.AI_MODEL_INTERVIEW || DEFAULT_MODEL
 };
 
 const app = express();
@@ -173,7 +177,7 @@ app.get('/api/ai/health', (_req, res) => res.json({
   model: DEFAULT_MODEL,
   models: MODELS,
   auth: !!ACCESS_PASSWORD,
-  sources: { adzuna: ADZUNA_READY }
+  sources: { adzuna: ADZUNA_READY, jooble: JOOBLE_READY }
 }));
 
 // Everything below the guard requires the access password (when one is set)
@@ -214,6 +218,38 @@ app.get('/api/jobs/adzuna', async (req, res) => {
       url: j.redirect_url,
       date: j.created,
       desc: str(j.description, 2000)
+    }));
+    res.json({ jobs });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
+
+// Jooble proxy (broad coverage incl. AU/India). Key stays server-side.
+app.get('/api/jobs/jooble', async (req, res) => {
+  try {
+    if (!JOOBLE_READY) return res.status(503).json({ error: 'Jooble not configured (set JOOBLE_KEY).' });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    let data;
+    try {
+      const r = await fetch('https://jooble.org/api/' + encodeURIComponent(JOOBLE_KEY), {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ keywords: str(req.query.what, 120), location: str(req.query.where, 120) })
+      });
+      data = await r.json().catch(() => ({}));
+      if (!r.ok) return res.status(502).json({ error: 'Jooble HTTP ' + r.status });
+    } finally { clearTimeout(timer); }
+    const jobs = (data.jobs || []).map((j) => ({
+      source: 'Jooble',
+      title: j.title,
+      company: j.company,
+      location: j.location,
+      salary: j.salary || '',
+      tags: j.type ? [j.type] : [],
+      url: j.link,
+      date: j.updated,
+      desc: str(j.snippet, 2000)
     }));
     res.json({ jobs });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
@@ -360,6 +396,60 @@ app.post('/api/ai/resume', async (req, res) => {
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
 });
 
+// Write a tailored cover letter for a job from the resume + JD.
+app.post('/api/ai/cover-letter', async (req, res) => {
+  try {
+    const resume = str(req.body && req.body.resume, 14000);
+    const jd = str(req.body && req.body.jd, 8000);
+    if (!jd) return res.status(400).json({ error: 'No job description provided.' });
+    const profile = profileLine(req.body && req.body.profile);
+    const job = (req.body && req.body.job) || {};
+    const system =
+      'You write concise, specific cover letters (250-350 words). Open with genuine interest, map the ' +
+      "candidate's real experience to the role's needs, and close with a clear call to action. No clichés, " +
+      'no fabrication beyond what the resume supports. Return ONLY the letter in clean Markdown, no commentary.';
+    const out = await callClaude({
+      model: MODELS.cover,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: [
+        cached(`CANDIDATE PROFILE: ${profile}\n\n=== RESUME ===\n${resume || '(none provided)'}`),
+        textBlock(`\n\n=== ROLE ===\n${str(job.title, 160)} at ${str(job.company, 120)}\n\n=== JOB DESCRIPTION ===\n${jd}`)
+      ] }],
+      maxTokens: 1200
+    });
+    if (!out) return res.status(502).json({ error: 'AI returned nothing.' });
+    res.json({ letter: out });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
+
+// Generate likely interview questions + talking points from a JD.
+app.post('/api/ai/interview', async (req, res) => {
+  try {
+    const jd = str(req.body && req.body.jd, 8000);
+    if (!jd) return res.status(400).json({ error: 'No job description provided.' });
+    const profile = profileLine(req.body && req.body.profile);
+    const resume = str(req.body && req.body.resume, 8000);
+    const system =
+      'You are an interview coach. From a job description and the candidate, produce likely interview ' +
+      'questions with a short prep tip each, plus key topics to revise. Respond ONLY as JSON: ' +
+      '{"topics":["..."],"questions":[{"q":"...","tip":"..."}]}. Up to 10 questions, up to 8 topics. ' +
+      'Tips reference the candidate background where relevant. No prose.';
+    const user = `CANDIDATE: ${profile}\nRESUME (optional): ${resume || '(none)'}\n\n=== JOB DESCRIPTION ===\n${jd}`;
+    const out = extractJSON(await callClaude({
+      model: MODELS.interview,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: user }],
+      maxTokens: 1800
+    }));
+    if (!out || typeof out !== 'object') return res.status(502).json({ error: 'AI returned an unparseable response.' });
+    const topics = Array.isArray(out.topics) ? out.topics.slice(0, 8).map((x) => str(x, 160)) : [];
+    const questions = Array.isArray(out.questions)
+      ? out.questions.slice(0, 10).filter((q) => q && q.q).map((q) => ({ q: str(q.q, 300), tip: str(q.tip, 400) }))
+      : [];
+    res.json({ topics, questions });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
+
 // ---------- static app ----------
 app.use(express.static(ROOT, { extensions: ['html'] }));
 app.get('/', (_req, res) => res.sendFile(path.join(ROOT, 'index.html')));
@@ -371,7 +461,7 @@ app.listen(PORT, () => {
   } else {
     console.log('AI: DISABLED — set ANTHROPIC_API_KEY in .env');
   }
-  console.log('Adzuna: ' + (ADZUNA_READY ? 'enabled' : 'off (set ADZUNA_APP_ID/ADZUNA_APP_KEY)'));
+  console.log('Adzuna: ' + (ADZUNA_READY ? 'enabled' : 'off') + ' | Jooble: ' + (JOOBLE_READY ? 'enabled' : 'off'));
   if (ANTHROPIC_KEY && !ACCESS_PASSWORD) {
     console.warn('WARNING: AI endpoints are OPEN (no ACCESS_PASSWORD). Anyone with the URL can spend your API credits. Set ACCESS_PASSWORD.');
   }

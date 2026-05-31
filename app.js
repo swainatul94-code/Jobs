@@ -46,6 +46,7 @@ function sanitizeJobList(arr) {
     source: str(j.source),
     notes: str(j.notes),
     nextStep: str(j.nextStep),
+    followUp: str(j.followUp).slice(0, 10),
     createdAt: str(j.createdAt) || new Date().toISOString(),
     updatedAt: str(j.updatedAt) || new Date().toISOString()
   }));
@@ -182,6 +183,32 @@ function renderDashboard() {
       actList.appendChild(el('li', {}, [left, right]));
     });
   }
+
+  renderFollowups();
+}
+
+function renderFollowups() {
+  const list = document.getElementById('followups');
+  if (!list) return;
+  list.replaceChildren();
+  const today = todayLocal();
+  const items = jobs
+    .filter(j => j.followUp && j.status !== 'Rejected')
+    .sort((a, b) => (a.followUp < b.followUp ? -1 : a.followUp > b.followUp ? 1 : 0));
+  if (!items.length) {
+    list.appendChild(el('li', { class: 'muted' }, 'No follow-ups scheduled. Add a follow-up date when editing a job.'));
+    return;
+  }
+  items.forEach(j => {
+    const overdue = j.followUp <= today;
+    const left = el('span', {}, [
+      el('b', {}, j.company), ' — ', j.role, ' ',
+      el('span', { class: 'badge ' + slug(j.status) }, j.status)
+    ]);
+    const right = el('span', { class: 'act-date ' + (overdue ? 'fu-over' : 'fu-up') },
+      (overdue ? 'Due ' : '') + j.followUp);
+    list.appendChild(el('li', {}, [left, right]));
+  });
 }
 
 // ========= DOM HELPERS =========
@@ -228,6 +255,7 @@ function openJobModal(job = null) {
   setVal('jLink', job?.link || '');
   setVal('jSource', job?.source || '');
   setVal('jNotes', job?.notes || '');
+  setVal('jFollowUp', job?.followUp || '');
   setVal('jNextStep', job?.nextStep || '');
   jobModal.hidden = false;
 }
@@ -247,6 +275,7 @@ function saveJobHandler() {
     source: getVal('jSource').trim(),
     notes: getVal('jNotes').trim(),
     nextStep: getVal('jNextStep').trim(),
+    followUp: getVal('jFollowUp'),
     updatedAt: new Date().toISOString()
   };
 
