@@ -23,16 +23,31 @@ const multer = require('multer');
 
 const ROOT = path.join(__dirname, '..');
 const PORT = Number(process.env.PORT) || 5500;
-const AI_MODEL = process.env.AI_MODEL || 'claude-haiku-4-5-20251001';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+
+// Per-task model routing for cost control. AI_MODEL sets the global default
+// (cheapest sensible model); override any single task via its own env var —
+// e.g. bump only resume tailoring to Sonnet for quality, keep the rest on Haiku.
+const DEFAULT_MODEL = process.env.AI_MODEL || 'claude-haiku-4-5-20251001';
+const MODELS = {
+  rank: process.env.AI_MODEL_RANK || DEFAULT_MODEL,
+  insight: process.env.AI_MODEL_INSIGHT || DEFAULT_MODEL,
+  email: process.env.AI_MODEL_EMAIL || DEFAULT_MODEL,
+  resume: process.env.AI_MODEL_RESUME || DEFAULT_MODEL
+};
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ---------- Anthropic helper ----------
-async function callClaude(system, userText, maxTokens = 1024) {
+// Content-block builders. cached() marks a block for prompt caching so the
+// stable prefix (system prompt, resume) is billed at ~10% on subsequent calls.
+const cached = (text) => ({ type: 'text', text, cache_control: { type: 'ephemeral' } });
+const textBlock = (text) => ({ type: 'text', text });
+
+async function callClaude({ model, system, messages, maxTokens = 1024 }) {
   if (!ANTHROPIC_KEY) {
     const err = new Error('AI not configured: set ANTHROPIC_API_KEY in .env');
     err.status = 503;
@@ -50,10 +65,10 @@ async function callClaude(system, userText, maxTokens = 1024) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: AI_MODEL,
+        model: model || DEFAULT_MODEL,
         max_tokens: maxTokens,
         system,
-        messages: [{ role: 'user', content: userText }]
+        messages
       })
     });
     const data = await res.json().catch(() => ({}));
@@ -100,7 +115,7 @@ function profileLine(p) {
 
 // ---------- routes ----------
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
-app.get('/api/ai/health', (_req, res) => res.json({ ok: true, ai: !!ANTHROPIC_KEY, model: AI_MODEL }));
+app.get('/api/ai/health', (_req, res) => res.json({ ok: true, ai: !!ANTHROPIC_KEY, model: DEFAULT_MODEL, models: MODELS }));
 
 // Rank/score a batch of jobs against the user profile.
 app.post('/api/ai/rank', async (req, res) => {
@@ -116,7 +131,12 @@ app.post('/api/ai/rank', async (req, res) => {
       'score each job 0-100 for fit to the candidate and give a terse one-line reason. ' +
       'Respond ONLY with a JSON array: [{"i":<index>,"score":<0-100>,"reason":"..."}]. No prose.';
     const user = `CANDIDATE: ${profile}\n\nJOBS:\n${list}`;
-    const out = extractJSON(await callClaude(system, user, 1500));
+    const out = extractJSON(await callClaude({
+      model: MODELS.rank,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: user }],
+      maxTokens: 1500
+    }));
     if (!Array.isArray(out)) return res.status(502).json({ error: 'AI returned an unparseable ranking.' });
     const clean = out
       .filter((r) => r && Number.isInteger(r.i) && r.i >= 0 && r.i < jobs.length)
@@ -140,7 +160,12 @@ app.post('/api/ai/email', async (req, res) => {
       `CANDIDATE: ${profile}\n\n` +
       `JOB: ${str(job.title, 160)} at ${str(job.company, 120)} (${str(job.location, 80)})\n` +
       `JOB DETAILS: ${str(job.desc, 1500)}`;
-    const out = extractJSON(await callClaude(system, user, 900));
+    const out = extractJSON(await callClaude({
+      model: MODELS.email,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: user }],
+      maxTokens: 900
+    }));
     if (!out || typeof out.body !== 'string') return res.status(502).json({ error: 'AI returned an unparseable email.' });
     res.json({ subject: str(out.subject, 200), body: str(out.body, 4000) });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
@@ -156,7 +181,12 @@ app.post('/api/ai/insight', async (req, res) => {
       '{"seniority":"...","salaryHint":"...","requirements":["..."],"mustHaves":["..."],"redFlags":["..."]}. ' +
       'Keep each array to at most 6 short bullet strings. Use "" or [] when unknown.';
     const user = `TITLE: ${str(job.title, 160)} @ ${str(job.company, 120)} (${str(job.location, 80)})\n\n${str(job.desc, 4000)}`;
-    const out = extractJSON(await callClaude(system, user, 900));
+    const out = extractJSON(await callClaude({
+      model: MODELS.insight,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: user }],
+      maxTokens: 900
+    }));
     if (!out || typeof out !== 'object') return res.status(502).json({ error: 'AI returned an unparseable insight.' });
     const arr = (v) => (Array.isArray(v) ? v.slice(0, 6).map((x) => str(x, 200)) : []);
     res.json({
@@ -212,8 +242,17 @@ app.post('/api/ai/resume', async (req, res) => {
       'summary, and reorder sections for relevance. Stay strictly truthful — never invent employers, dates, ' +
       'titles, certifications, or skills the original resume does not support. Return ONLY the tailored resume ' +
       'in clean Markdown, no commentary.';
-    const user = `CANDIDATE PROFILE: ${profile}\n\n=== JOB DESCRIPTION ===\n${jd}\n\n=== CURRENT RESUME ===\n${resume}`;
-    const out = await callClaude(system, user, 2500);
+    // Cache the stable prefix (system + profile + resume) so tailoring the same
+    // resume to many different JDs only re-bills the small JD block each time.
+    const out = await callClaude({
+      model: MODELS.resume,
+      system: [cached(system)],
+      messages: [{ role: 'user', content: [
+        cached(`CANDIDATE PROFILE: ${profile}\n\n=== CURRENT RESUME ===\n${resume}`),
+        textBlock(`\n\n=== JOB DESCRIPTION (tailor the resume to this) ===\n${jd}`)
+      ] }],
+      maxTokens: 2500
+    });
     if (!out) return res.status(502).json({ error: 'AI returned nothing.' });
     res.json({ resume: out });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
@@ -225,5 +264,9 @@ app.get('/', (_req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 
 app.listen(PORT, () => {
   console.log(`Job Tracker running at http://localhost:${PORT}`);
-  console.log(`AI: ${ANTHROPIC_KEY ? 'enabled (' + AI_MODEL + ')' : 'DISABLED — set ANTHROPIC_API_KEY in .env'}`);
+  if (ANTHROPIC_KEY) {
+    console.log('AI: enabled — rank=' + MODELS.rank + ' insight=' + MODELS.insight + ' email=' + MODELS.email + ' resume=' + MODELS.resume);
+  } else {
+    console.log('AI: DISABLED — set ANTHROPIC_API_KEY in .env');
+  }
 });

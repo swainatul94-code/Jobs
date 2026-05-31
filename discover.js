@@ -403,7 +403,26 @@
   }
 
   // ---- AI: per-job insight ----
+  function renderInsight(ins, box) {
+    box.replaceChildren();
+    const meta = [ins.seniority && 'Seniority: ' + ins.seniority, ins.salaryHint && 'Salary: ' + ins.salaryHint]
+      .filter(Boolean).join(' · ');
+    if (meta) box.appendChild(el('div', { class: 'ins-meta' }, meta));
+    const section = (title, items, cls) => {
+      if (!items || !items.length) return;
+      box.appendChild(el('div', { class: 'ins-sec ' + cls }, [
+        el('b', {}, title),
+        el('ul', {}, items.map((x) => el('li', {}, x)))
+      ]));
+    };
+    section('Must-haves', ins.mustHaves, 'ins-must');
+    section('Requirements', ins.requirements, 'ins-req');
+    section('Red flags', ins.redFlags, 'ins-flag');
+    if (!box.childNodes.length) box.appendChild(el('div', { class: 'muted' }, 'No insight extracted.'));
+  }
+
   async function loadInsight(r, btn, box) {
+    if (r._insightData) { renderInsight(r._insightData, box); return; } // cached — no API call
     btn.disabled = true;
     const orig = btn.textContent;
     btn.textContent = 'Analyzing…';
@@ -411,21 +430,8 @@
       const ins = await postJSON('/api/ai/insight', {
         job: { title: r.title, company: r.company, location: r.location, desc: r.desc }
       });
-      box.replaceChildren();
-      const meta = [ins.seniority && 'Seniority: ' + ins.seniority, ins.salaryHint && 'Salary: ' + ins.salaryHint]
-        .filter(Boolean).join(' · ');
-      if (meta) box.appendChild(el('div', { class: 'ins-meta' }, meta));
-      const section = (title, items, cls) => {
-        if (!items || !items.length) return;
-        box.appendChild(el('div', { class: 'ins-sec ' + cls }, [
-          el('b', {}, title),
-          el('ul', {}, items.map((x) => el('li', {}, x)))
-        ]));
-      };
-      section('Must-haves', ins.mustHaves, 'ins-must');
-      section('Requirements', ins.requirements, 'ins-req');
-      section('Red flags', ins.redFlags, 'ins-flag');
-      if (!box.childNodes.length) box.appendChild(el('div', { class: 'muted' }, 'No insight extracted.'));
+      r._insightData = ins;
+      renderInsight(ins, box);
     } catch (e) {
       box.replaceChildren(el('div', { class: 'st-fail' }, 'Insight failed: ' + e.message));
     } finally {
