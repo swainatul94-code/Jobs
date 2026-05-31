@@ -250,7 +250,26 @@
     return set;
   }
 
-  // ---- save a result into the tracker ----
+  // ---- save / apply a result into the tracker ----
+  function buildJob(r, status) {
+    const now = new Date().toISOString();
+    return {
+      id: uid(),
+      company: String(r.company || '').slice(0, 2000),
+      role: String(r.title || '').slice(0, 2000),
+      location: String(r.location || '').slice(0, 2000),
+      salary: String(r.salary || '').slice(0, 2000),
+      status,
+      date: todayLocal(),
+      link: safeUrl(r.url || ''),
+      source: r.source || '',
+      notes: r.desc ? truncate(r.desc, 1500) : '', // keep enough JD for resume tailoring
+      nextStep: '',
+      createdAt: now,
+      updatedAt: now
+    };
+  }
+
   function saveResult(r, btn) {
     const link = safeUrl(r.url || '');
     if (link && savedUrls().has(link.toLowerCase())) {
@@ -258,30 +277,34 @@
       showToast('Already in tracker.');
       return;
     }
-    const now = new Date().toISOString();
-    jobs.push({
-      id: uid(),
-      company: String(r.company || '').slice(0, 2000),
-      role: String(r.title || '').slice(0, 2000),
-      location: String(r.location || '').slice(0, 2000),
-      salary: String(r.salary || '').slice(0, 2000),
-      status: 'Wishlist',
-      date: todayLocal(),
-      link,
-      source: r.source || '',
-      notes: r.desc ? truncate(r.desc, 500) : '',
-      nextStep: '',
-      createdAt: now,
-      updatedAt: now
-    });
-    if (!save(STORAGE.jobs, jobs)) {
-      jobs.pop();
-      return; // save() already toasted the failure
-    }
+    jobs.push(buildJob(r, 'Wishlist'));
+    if (!save(STORAGE.jobs, jobs)) { jobs.pop(); return; } // save() already toasted
     markSaved(btn);
     renderJobs();
     renderDashboard();
     showToast('Saved to tracker.');
+  }
+
+  // Apply: track as Applied, open the posting, and load the JD into the resume tailor.
+  function applyResult(r) {
+    const link = safeUrl(r.url || '');
+    let job = link ? jobs.find((j) => j.link && j.link.toLowerCase() === link.toLowerCase()) : null;
+    if (job) {
+      job.status = 'Applied';
+      job.updatedAt = new Date().toISOString();
+      if (!job.date) job.date = todayLocal();
+    } else {
+      job = buildJob(r, 'Applied');
+      jobs.push(job);
+    }
+    save(STORAGE.jobs, jobs);
+    renderJobs();
+    renderDashboard();
+    if (link) window.open(link, '_blank', 'noopener');
+    if (typeof window.JT_loadJD === 'function') {
+      window.JT_loadJD(r.desc || job.notes || '', (r.title || '') + (r.company ? ' @ ' + r.company : ''));
+    }
+    showToast('Tracking as Applied — tailor your resume & submit on the site.');
   }
 
   function markSaved(btn) {
@@ -319,6 +342,10 @@
       if (isSaved) saveBtn.disabled = true;
       else saveBtn.addEventListener('click', () => saveResult(r, saveBtn));
       actions.push(saveBtn);
+
+      const applyBtn = el('button', { class: 'btn-apply' }, 'Apply →');
+      applyBtn.addEventListener('click', () => applyResult(r));
+      actions.push(applyBtn);
 
       const insightBox = el('div', { class: 'r-insight' });
       if (AI.available && r.desc) {

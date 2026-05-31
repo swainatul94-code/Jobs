@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
+const multer = require('multer');
 
 // --- tiny .env loader (avoids a dotenv dependency) ---
 (function loadEnv() {
@@ -28,6 +29,7 @@ const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 // ---------- Anthropic helper ----------
 async function callClaude(system, userText, maxTokens = 1024) {
@@ -164,6 +166,56 @@ app.post('/api/ai/insight', async (req, res) => {
       mustHaves: arr(out.mustHaves),
       redFlags: arr(out.redFlags)
     });
+  } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
+});
+
+// Extract plain text from an uploaded resume (PDF / DOCX / TXT / MD).
+app.post('/api/resume/extract', (req, res) => {
+  upload.single('file')(req, res, async (uploadErr) => {
+    try {
+      if (uploadErr) return res.status(400).json({ error: uploadErr.message });
+      if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+      const name = (req.file.originalname || '').toLowerCase();
+      const buf = req.file.buffer;
+      let text = '';
+      if (name.endsWith('.pdf')) {
+        const pdf = require('pdf-parse/lib/pdf-parse.js'); // avoid the index debug shim
+        text = (await pdf(buf)).text || '';
+      } else if (name.endsWith('.docx')) {
+        const mammoth = require('mammoth');
+        text = (await mammoth.extractRawText({ buffer: buf })).value || '';
+      } else if (name.endsWith('.txt') || name.endsWith('.md')) {
+        text = buf.toString('utf8');
+      } else if (name.endsWith('.doc')) {
+        return res.status(415).json({ error: 'Legacy .doc not supported — save as .docx or PDF.' });
+      } else {
+        return res.status(415).json({ error: 'Unsupported type. Use PDF, DOCX, TXT, or MD.' });
+      }
+      text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+      if (!text) return res.status(422).json({ error: 'No text found (scanned/image PDF?). Paste it manually.' });
+      res.json({ text: text.slice(0, 20000) });
+    } catch (e) { res.status(500).json({ error: 'Extraction failed: ' + e.message }); }
+  });
+});
+
+// Rewrite a resume to target a specific job description (truthfully).
+app.post('/api/ai/resume', async (req, res) => {
+  try {
+    const resume = str(req.body && req.body.resume, 18000);
+    const jd = str(req.body && req.body.jd, 8000);
+    if (!resume) return res.status(400).json({ error: 'No resume provided.' });
+    if (!jd) return res.status(400).json({ error: 'No job description provided.' });
+    const profile = profileLine(req.body && req.body.profile);
+    const system =
+      'You are an expert resume editor. Rewrite the candidate resume to target the given job description: ' +
+      'surface the most relevant skills and achievements, mirror important keywords for ATS, sharpen the ' +
+      'summary, and reorder sections for relevance. Stay strictly truthful — never invent employers, dates, ' +
+      'titles, certifications, or skills the original resume does not support. Return ONLY the tailored resume ' +
+      'in clean Markdown, no commentary.';
+    const user = `CANDIDATE PROFILE: ${profile}\n\n=== JOB DESCRIPTION ===\n${jd}\n\n=== CURRENT RESUME ===\n${resume}`;
+    const out = await callClaude(system, user, 2500);
+    if (!out) return res.status(502).json({ error: 'AI returned nothing.' });
+    res.json({ resume: out });
   } catch (e) { res.status(e.status || 500).json({ error: e.message }); }
 });
 

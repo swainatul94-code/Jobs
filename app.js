@@ -272,6 +272,22 @@ function deleteJob(id) {
   showToast('Deleted.');
 }
 
+function applyJob(id) {
+  const job = jobs.find(j => j.id === id);
+  if (!job) return;
+  job.status = 'Applied';
+  job.updatedAt = new Date().toISOString();
+  if (!job.date) job.date = todayLocal();
+  save(STORAGE.jobs, jobs);
+  renderJobs();
+  renderDashboard();
+  if (job.link) window.open(job.link, '_blank', 'noopener');
+  if (typeof window.JT_loadJD === 'function') {
+    window.JT_loadJD(job.notes || '', `${job.company} — ${job.role}`);
+  }
+  showToast('Marked Applied — tailor your resume & submit on the site.');
+}
+
 function changeJobStatus(id, status) {
   if (!JOB_STATUSES.includes(status)) return;
   const job = jobs.find(j => j.id === id);
@@ -324,6 +340,7 @@ function renderJobs() {
       j.source ? el('small', { class: 'muted' }, j.source) : null
     ]);
     const actions = el('td', { class: 'row-actions' }, [
+      el('button', { class: 'btn-apply', dataset: { action: 'apply-job', id: j.id } }, 'Apply →'),
       el('button', { dataset: { action: 'edit-job', id: j.id } }, 'Edit'),
       el('button', { class: 'btn-danger', dataset: { action: 'delete-job', id: j.id } }, 'Del')
     ]);
@@ -352,6 +369,8 @@ document.getElementById('jobsTable').addEventListener('click', (e) => {
     if (j) openJobModal(j);
   } else if (btn.dataset.action === 'delete-job') {
     deleteJob(id);
+  } else if (btn.dataset.action === 'apply-job') {
+    applyJob(id);
   }
 });
 document.getElementById('jobsTable').addEventListener('change', (e) => {

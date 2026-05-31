@@ -292,6 +292,17 @@ tbody tr:last-child td { border-bottom: none; }
 .ins-flag b { color: var(--danger); }
 .ins-must b { color: var(--success); }
 
+/* APPLY BUTTON */
+.btn-apply { background: var(--success); color: #fff; border-color: var(--success); font-weight: 600; }
+.btn-apply:hover { filter: brightness(1.08); background: var(--success); }
+.row-actions .btn-apply { padding: 4px 8px; font-size: 12px; }
+
+/* RESUME TAB */
+#tab-resume .panel label.full { display: block; margin-top: 14px; }
+#tab-resume textarea { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; }
+#resumeMeta, #jdSource { margin-left: 6px; }
+#tab-resume .btn-row { margin-top: 12px; align-items: center; }
+
 /* SOURCE BADGES */
 .badge.remotive { background: #e0f2fe; color: #075985; }
 .badge.remoteok { background: #ede9fe; color: #5b21b6; }

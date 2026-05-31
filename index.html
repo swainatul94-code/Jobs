@@ -21,6 +21,7 @@
       <button class="tab-btn" data-tab="jobs">Jobs</button>
       <button class="tab-btn" data-tab="recruiters">Recruiters</button>
       <button class="tab-btn" data-tab="email">Cold Email</button>
+      <button class="tab-btn" data-tab="resume">Resume</button>
       <button class="tab-btn" data-tab="settings">Settings</button>
     </nav>
     <div class="topbar-actions">
@@ -185,6 +186,44 @@
       </div>
     </section>
 
+    <!-- RESUME -->
+    <section id="tab-resume" class="tab-panel">
+      <div class="panel">
+        <h2>Master Resume</h2>
+        <p class="muted">Upload (PDF / DOCX / TXT / MD) or paste your resume. Stored locally in your browser.</p>
+        <div class="btn-row">
+          <button id="resumeUploadBtn">Upload file</button>
+          <input type="file" id="resumeFile" accept=".pdf,.docx,.txt,.md" hidden />
+          <button id="saveResume" class="btn-primary">Save</button>
+          <span id="resumeMeta" class="muted"></span>
+        </div>
+        <label class="full">Resume text
+          <textarea id="resumeText" rows="14" placeholder="Paste your resume here, or use Upload file above..."></textarea>
+        </label>
+      </div>
+
+      <div class="panel">
+        <h2>Tailor to a Job Description</h2>
+        <p class="muted">Paste a JD (e.g. from Naukri or LinkedIn), or click <b>Apply</b> on any tracked or found job to load it here. AI rewrites your resume to match — truthfully, no fabrication.</p>
+        <label class="full">Job description <span id="jdSource" class="muted"></span>
+          <textarea id="jdText" rows="8" placeholder="Paste the job description here..."></textarea>
+        </label>
+        <div class="btn-row">
+          <button id="tailorBtn" class="btn-ai" hidden>✨ Tailor resume to JD</button>
+          <span id="tailorHint" class="muted"></span>
+        </div>
+        <label class="full">Tailored resume
+          <textarea id="tailoredText" rows="16" placeholder="Your tailored resume appears here — fully editable before you download."></textarea>
+        </label>
+        <div class="btn-row">
+          <button id="copyTailored">Copy</button>
+          <button id="dlTailoredMd">Download .md</button>
+          <button id="dlTailoredDoc">Download .doc</button>
+          <button id="printTailored">Print / Save PDF</button>
+        </div>
+      </div>
+    </section>
+
     <!-- SETTINGS -->
     <section id="tab-settings" class="tab-panel">
       <div class="panel">
@@ -277,5 +316,6 @@
 
   <script src="app.js"></script>
   <script src="discover.js"></script>
+  <script src="resume.js"></script>
 </body>
 </html>
