@@ -348,7 +348,17 @@
       }
     });
 
-    const filtered = dedupe(all.filter((j) => matches(j, terms, loc)));
+    let filtered = dedupe(all.filter((j) => matches(j, terms, loc)));
+    let relaxedNote = '';
+    // Location is a soft filter: these are remote-first boards, so a strict geo
+    // match often wipes out otherwise-good keyword hits. Fall back gracefully.
+    if (!filtered.length && loc && all.length) {
+      const keywordOnly = dedupe(all.filter((j) => matches(j, terms, '')));
+      if (keywordOnly.length) {
+        filtered = keywordOnly;
+        relaxedNote = 'No location match for “' + loc + '” (these boards are mostly remote) — showing all keyword matches.';
+      }
+    }
     filtered.sort((a, b) => {
       const da = new Date(a.date || 0).getTime() || 0;
       const db = new Date(b.date || 0).getTime() || 0;
@@ -359,7 +369,8 @@
     const statusWrap = el('div', { class: 'status-line' }, [
       el('b', {}, capped.length + ' result' + (capped.length === 1 ? '' : 's')),
       filtered.length > capped.length ? el('span', { class: 'muted' }, ' (showing first 250) ') : ' ',
-      el('span', { class: 'src-pills' }, summary)
+      el('span', { class: 'src-pills' }, summary),
+      relaxedNote ? el('div', { class: 'relaxed-note muted' }, relaxedNote) : null
     ]);
     setStatus(statusWrap);
     renderResults(capped);
