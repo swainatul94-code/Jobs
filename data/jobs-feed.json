@@ -1,35 +1,7 @@
 {
-  "generatedAt": "2026-06-19T06:10:13.774Z",
+  "generatedAt": "2026-06-20T05:06:28.494Z",
   "query": "qa automation",
   "location": "",
-  "count": 1,
-  "jobs": [
-    {
-      "source": "RemoteOK",
-      "title": "Technical Support Specialist",
-      "company": "INNERGY",
-      "location": "Toronto, Toronto, Ontario, Canada",
-      "salary": "",
-      "tags": [
-        "customer support",
-        "design",
-        "education",
-        "technical",
-        "dev",
-        "marketing",
-        "quality assurance",
-        "cloud",
-        "microsoft",
-        "exec",
-        "ops",
-        "stats",
-        "engineer",
-        "recruiter",
-        "digital nomad"
-      ],
-      "url": "https://remoteOK.com/remote-jobs/remote-technical-support-specialist-innergy-1133586",
-      "date": "2026-06-16T15:06:00+00:00",
-      "desc": "INNERGY is transforming the woodworking industry with purpose built, cloud based ERP software designed exclusively for custom manufacturers. Our platform helps businesses operate smarter, faster, and more efficiently while seamlessly connecting design, production, and delivery for teams creating architectural millwork, cabinetry, and casework. What truly sets INNERGY apart is our people. Founded in 2016, we are a globally distributed team of 200 plus professionals united by deep software expertise and a shared passion for solving meaningful, real world problems. We value collaboration, creativity, and ownership, and we are intentional about building not only powerful products, but also a culture where people feel supported, heard, and inspired to do their best work. With strong momentum and the recent acquisition of Microvellum, a trusted leader in design to manufacturing solutions for the woodworking industry, INNERGY is entering an exciting new phase of growth. This combination expands our capabilities, deepens our industry impact, and accelerates our vision of delivering a truly connected, end to end platform for custom manufacturers. As we scale thoughtfully and bring together top talent and new perspectives, this is a unique opportunity to join a company where your work will have visible impact, your ideas will help shape decisions, and your contributions will play a meaningful role in defining the future of a fast evolving product, team, and industry. Job Description As a Technical Support Specialist , youâll ensure clients receive fast, accurate, and empathetic help while fully leveraging INNERGY Design and integrated CAD/CAM solutions. Youâll troubleshoot complex technical issues, collaborate across teams, and help shape the future of support by training our AI systems to anticipate and resolve client needs automatically. This role bridges client experience, technical excellence, and AI innovation, directly impacting customer satisfaction, operational efficiency, and product improvement. Key Responsibilities Client Support Experience Manage and resolve client issues through Intercom and Microsoft Dynamics, ensuring responses meet SLAs and deliver a consistently positive experience. Communicate complex technical concepts clearly and empathetically to build client confidence and trust. Technical Troubleshooting Diagnose and resolve issues related to INNERGY Design, Microvellum Toolbox, and AutoCAD-based integrations. Support workflows including CAD integration, library configurations, and manufacturing processes to ensure seamless design-to-production operations. AI Automation Enablement Tag and label âHow-do-Iâ tickets to train Intercom AI, improving self-service resolution rates. Leverage ticket history and pattern analysis to improve AI accuracy, reduce manual intervention, and scale automation. Knowledge Management Develop and maintain a knowledge base of reusable responses, how-to articles, and best practices. Continuously refine documentation to improve internal efficiency and client self-service. Bug Reporting Collaboration Create detailed, reproducible bug reports from client issues. Collaborate with Engineering and Product teams to drive fast, high-quality fixes. Track recurring issues and share insights to inform product improvements. Data Process Optimization Accurately tag and categorize tickets for reporting and analytics. Identify trends and partner with peers to refine workflows and elevate the overall support experience. Qualifications 2+ years in a technical support role, ideally within CAD/CAM software, design applications, or manufacturing technology. Bilingual French and English Strong troubleshooting and analytical skills, especially in design-to-manufacturing workflows. Proficiency with support platforms such as Intercom, Microsoft Dynamics, or similar systems. Excellent written and verbal communication skills, with the ability to explain complex issues clearly and confidently. Proven ability to manage multiple tickets in a fast-paced environment with accuracy and composure. Preferred Familiarity with INNERGY Design, Microvellum Toolbox, and AutoCAD-based systems. Experience writing structured bug reports and collaborating with development/QA teams. Exposure to AI-assisted support platforms or willingness to learn AI training methods. Detail-oriented approach to ticket categorization, data tagging, and reporting. Success Indicators Maintain client satisfaction scores above defined benchmarks. Contribute to measurable reductions in manual ticket load through effective AI training and documentation. Deliver accurate, actionable bug reports that accelerate engineering response time. Demonstrate continuous improvement in support efficiency, response quality, and knowledge sharing. Additional Information Accessibility Work Environment INNERGY is committed to providing an inclusive and accessible work environment. We support reasonable workplace adjustments for individuals with disability in accordance with applicable Australian laws. If you require adjustments during the recruitment process or in your role, please let us know. This role is primarily computer-based and may involve extended screen time and regular communication through digital channels. Work may be performed in a remote or office-based environment, depending on role and location. INNERGY is committed to supporting employee wellbeing, flexibility, and a safe working environment across all regions. Please mention the word **SATISFIES** and tag RMjAuODEuNDcuMTE1 when applying to show you read the job post completely (#RMjAuODEuNDcuMTE1). This is a beta feature to avoid spam applicants. Companies can search these words to find applicants that read this and see they're human."
-    }
-  ]
+  "count": 0,
+  "jobs": []
 }
