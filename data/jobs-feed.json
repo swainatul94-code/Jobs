@@ -1,9 +1,23 @@
 {
-  "generatedAt": "2026-07-01T05:16:54.314Z",
+  "generatedAt": "2026-07-02T04:54:22.850Z",
   "query": "qa automation",
   "location": "",
-  "count": 6,
+  "count": 7,
   "jobs": [
+    {
+      "source": "Jobicy",
+      "title": "Middle Strong General QA (with AI)",
+      "company": "TechMagic",
+      "location": "Ukraine",
+      "salary": "",
+      "tags": [
+        "Software Engineering",
+        "Full-Time"
+      ],
+      "url": "https://jobicy.com/jobs/145122-middle-strong-general-qa-with-ai",
+      "date": "2026-07-01T11:11:43+00:00",
+      "desc": "We are looking for a Middle strong General QA Engineer with 3+ years of experience to join a distributed product team and take ownership of quality across the full testing cycle. The ideal candidate has a strong manual and automation testing background, mobile testing experience, and — most importantly — an AI-first mindset: you actively"
+    },
     {
       "source": "Remotive",
       "title": "Senior Product Manager",
