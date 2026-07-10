@@ -1,38 +1,36 @@
 {
-  "generatedAt": "2026-07-09T04:44:22.449Z",
+  "generatedAt": "2026-07-10T04:44:24.863Z",
   "query": "qa automation",
   "location": "",
-  "count": 8,
+  "count": 9,
   "jobs": [
     {
-      "source": "RemoteOK",
-      "title": "Senior Quality Engineer",
-      "company": "Tellent",
-      "location": "Remote",
-      "salary": "$ 200000 – $ 225000",
+      "source": "Jobicy",
+      "title": "QA Engineer [gn] (Automation & Resilience)",
+      "company": "Actian",
+      "location": "Europe",
+      "salary": "",
       "tags": [
-        "design",
-        "graphql",
-        "hr",
-        "sys admin",
-        "technical",
-        "customer support",
-        "dev",
-        "testing",
-        "web dev",
-        "quality assurance",
-        "api",
-        "exec",
-        "senior",
-        "medical",
-        "engineer",
-        "recruiter",
-        "backend",
-        "digital nomad"
+        "QA &amp; Testing",
+        "Full-Time"
       ],
-      "url": "https://remoteOK.com/remote-jobs/remote-senior-quality-engineer-tellent-1134436",
-      "date": "2026-07-03T16:00:13+00:00",
-      "desc": "About the Role As a Senior Quality Engineer you'll own and grow the quality of Tellent HR alongside our existing QE team. You'll drive our test automation strategy, expand end-to-end coverage in Playwright, and raise the bar for backend testing. This is a hands-on collaborative role with genuine ownership, direct impact on product development and the experience of our customers. Your 12-Month Journey During your first 3 months: You'll get to know Tellent HR, our engineering practices, and our quality standards. You'll learn our testing framework and development workflow while gradually contributing to automated and exploratory testing. Within 6 months: You'll take ownership of quality for parts of the product, expand our Playwright test coverage and work closely with engineers to build quality into every stage of development. After 1 year: You'll be a trusted quality partner within the team, driving improvements to our testing strategy, raising the bar for automation, and helping shape how we approach quality as Tellent HR continues to grow. What Youâll Be Doing Work closely with our other QEâs to help bring our test automation strategy to life across Tellent HR, taking joint ownership and maintaining a significant part of it as it grows. Partner with developers and fellow QEâs to embed quality early, sharing domain knowledge in both directions and shaping testing practices collaboratively. Design and execute comprehensive test plans, test cases, and test scripts to ensure software accuracy and functionality Develop into a product domain expert using that understanding to test, spot risks earlier and guide quality decisions across Tellent HR What You Bring Strong QA experience: Several years of hands-on quality engineering, with senior-level ownership of testing for complex web applications. E2E automation: Experience building and maintaining end-to-end test suites in Playwright API backend testing skills: Proficiency testing GraphQL APIs and backend services Balance of product and technical thinking: Equally at home discussing product behaviour and digging into technical detail. Communication: Fluent English and Polish for daily collaboration. What We Offer Primarily remote working with flexibility and opportunities to connect with the team Diverse and international team environment Annual compensation range: 200000-225000 PLN/year (+ VAT where applicable) Time off based on contract type: B2B: 30 paid break days Employment contract: 26 paid holiday days + 2 wellbeing days â¬1500 annual learning budget Wellness perks including Multisport and private healthcare (LuxMed) Work from anywhere for up to 4 weeks per year Apple MacBook, displays, and all the tools you need to succeed â¬200 home office budget + work-from-home allowance About Tellent Tellent is a leading Talent Management Suite designed to empower HR People teams across the entire employee journey. Our all-in-one platform combines an Applicant Tracking System ( Tellent Recruitee ), an intuitive HRIS ( Tellent HR ), and powerful Performance Management software ( Tellent Grow ). With 250+ team members globally, 7,000+ customers in 100+ countries, and a growing ecosystem of 500+ partners, we help organizations attract, grow, and retain top talent â and weâre just getting started. AI in our recruitment process We use our internally developed AI tools to help streamline our recruitment process. However, technology never makes a decision. Every candidate is personally reviewed by our team. Your journey with us is guided by people, supported by tech. Curious about how it works? Read ourÂ AI Statement , check ourÂ Privacy Policy , or chat with us atÂ hr@tellent.com . If you require accommodations or support during the recruitment process, please let us know â weâre happy to help. Please mention the word **LUCID** and tag RMjAuNTEuMTk5LjI= when applying to show you read the job post completely (#RMjAuNTEuMTk5LjI=). This is a beta feature to avoid spam applicants. Companies can search these words to find applicants that read this and see they're human."
+      "url": "https://jobicy.com/jobs/149050-qa-engineer-gn-automation-resilience",
+      "date": "2026-07-09T11:49:58+00:00",
+      "desc": "The QA Automation function is the ultimate guardian of our platform’s reliability, scalability, and deployment velocity. In a complex, data-heavy ecosystem, manual testing is a bottleneck; continuous, intelligent, and bulletproof automation is the only way forward. We are looking for a highly technical, hands-on QA Engineer who will focus relentlessly on End-to-End (E2E) test automation"
+    },
+    {
+      "source": "Jobicy",
+      "title": "QA Automation Lead [gn] Data Intelligence",
+      "company": "Actian",
+      "location": "Europe",
+      "salary": "",
+      "tags": [
+        "QA &amp; Testing",
+        "Full-Time"
+      ],
+      "url": "https://jobicy.com/jobs/149048-qa-automation-lead-gn-data-intelligence",
+      "date": "2026-07-09T11:49:55+00:00",
+      "desc": "The QA Automation Team is the ultimate guardian of our platform’s reliability, scalability, and deployment velocity. In a complex, data-heavy ecosystem, manual testing is a bottleneck; continuous, intelligent, and bulletproof automation is the only way forward. We are looking for a QA Automation Lead who will architect, scale, and own our automated testing strategy end-to-end."
     },
     {
       "source": "Remotive",
