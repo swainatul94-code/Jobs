@@ -1,23 +1,9 @@
 {
-  "generatedAt": "2026-07-11T04:07:35.055Z",
+  "generatedAt": "2026-07-12T04:21:27.054Z",
   "query": "qa automation",
   "location": "",
-  "count": 9,
+  "count": 8,
   "jobs": [
-    {
-      "source": "Jobicy",
-      "title": "QA Engineer [gn] (Automation & Resilience)",
-      "company": "Actian",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149050-qa-engineer-gn-automation-resilience",
-      "date": "2026-07-09T11:49:58+00:00",
-      "desc": "The QA Automation function is the ultimate guardian of our platform’s reliability, scalability, and deployment velocity. In a complex, data-heavy ecosystem, manual testing is a bottleneck; continuous, intelligent, and bulletproof automation is the only way forward. We are looking for a highly technical, hands-on QA Engineer who will focus relentlessly on End-to-End (E2E) test automation"
-    },
     {
       "source": "Jobicy",
       "title": "QA Automation Lead [gn] Data Intelligence",
