@@ -1,23 +1,9 @@
 {
-  "generatedAt": "2026-07-12T04:21:27.054Z",
+  "generatedAt": "2026-07-13T04:25:33.284Z",
   "query": "qa automation",
   "location": "",
-  "count": 8,
+  "count": 7,
   "jobs": [
-    {
-      "source": "Jobicy",
-      "title": "QA Automation Lead [gn] Data Intelligence",
-      "company": "Actian",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149048-qa-automation-lead-gn-data-intelligence",
-      "date": "2026-07-09T11:49:55+00:00",
-      "desc": "The QA Automation Team is the ultimate guardian of our platform’s reliability, scalability, and deployment velocity. In a complex, data-heavy ecosystem, manual testing is a bottleneck; continuous, intelligent, and bulletproof automation is the only way forward. We are looking for a QA Automation Lead who will architect, scale, and own our automated testing strategy end-to-end."
-    },
     {
       "source": "Remotive",
       "title": "Senior AI Engineer",
