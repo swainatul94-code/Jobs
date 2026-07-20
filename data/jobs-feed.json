@@ -1,23 +1,9 @@
 {
-  "generatedAt": "2026-07-19T04:17:38.466Z",
+  "generatedAt": "2026-07-20T04:31:40.656Z",
   "query": "qa automation",
   "location": "",
-  "count": 9,
+  "count": 8,
   "jobs": [
-    {
-      "source": "Jobicy",
-      "title": "Senior QA Automation Engineer",
-      "company": "Zartis",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/146790-senior-qa-automation-engineer-3",
-      "date": "2026-07-17T08:45:06+00:00",
-      "desc": "The company and our mission: Zartis is a global AI transformation and technology consulting partner where talented engineers and technologists work on cutting edge innovation. We partner with ambitious organizations to design, build, and scale technology solutions that deliver real impact. Our teams bring deep expertise in AI driven platforms, secure API architectures, and cloud"
-    },
     {
       "source": "Remotive",
       "title": "Senior DevOps Engineer",
