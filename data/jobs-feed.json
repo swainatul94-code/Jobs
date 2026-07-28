@@ -1,107 +1,9 @@
 {
-  "generatedAt": "2026-07-27T04:31:57.937Z",
+  "generatedAt": "2026-07-28T03:55:28.066Z",
   "query": "qa automation",
   "location": "",
-  "count": 9,
+  "count": 4,
   "jobs": [
-    {
-      "source": "Jobicy",
-      "title": "Chinese Simplified Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149748-chinese-simplified-accessibility-tester",
-      "date": "2026-07-26T03:33:51+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "Spanish Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149742-spanish-accessibility-tester",
-      "date": "2026-07-26T03:33:41+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "Italian Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149741-italian-accessibility-tester",
-      "date": "2026-07-26T03:33:39+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "Dutch Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149740-dutch-accessibility-tester",
-      "date": "2026-07-26T03:33:38+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "French Canadian Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149737-french-canadian-accessibility-tester",
-      "date": "2026-07-26T03:33:33+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "Portuguese Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149736-portuguese-accessibility-tester",
-      "date": "2026-07-26T03:33:32+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
-    {
-      "source": "Jobicy",
-      "title": "German Accessibility Tester",
-      "company": "Welo Global",
-      "location": "Europe",
-      "salary": "",
-      "tags": [
-        "QA &amp; Testing",
-        "Full-Time"
-      ],
-      "url": "https://jobicy.com/jobs/149735-german-accessibility-tester",
-      "date": "2026-07-26T03:33:30+00:00",
-      "desc": "About Welocalize Welocalize, a Welo Global brand, serves localization teams through AI-enabled multilingual content solutions that enable enterprises to operate and scale globally. Welocalize combines AI, automation, and human expertise to support enterprises in more than 300 languages, enabling accurate, culturally aligned, and compliant multilingual content at scale.About the Role Welocalize is expanding its network of accessibility"
-    },
     {
       "source": "Remotive",
       "title": "Senior DevOps Engineer",
@@ -217,6 +119,34 @@
       "url": "https://remotive.com/remote-jobs/artificial-intelligence/senior-ai-engineer-2090986",
       "date": "2026-07-02T11:45:47",
       "desc": "Are you a talented Senior AI Engineer looking for a remote job that lets you show your skills and get decent compensation? Look no further than Lemon.io — the marketplace that connects you with hand-picked startups in the US and Europe. What we offer: The rate depends on your skills and experience. We've already paid out over $11M to our engineers. No more hunting for clients or negotiating rates — let us handle the business side of things so you can focus on what you do best. Choose a schedule that works best for you. It’s possible to communicate async or minimally overlap within team working hours. We respect your seniority so you can expect no micromanagement or screen trackers. Communicate directly with the clients. Most of them have technical backgrounds. Sounds good, yeah? Most of our projects involve working in a fast-paced startup environment. We hope you like it as much as we do. Requirements: 3+ years of commercial experience applying AI to practical technology solutions A solid understanding of Python is a must; experience with other programming languages commonly used in AI is a plus Experience with Vector Databases, Pinecone or Weaviate is required 2+ years of experience with LangChain is mandatory 2+ years of experience with large language models (LLMs) or vLLMs is mandatory 2+ years of experience with RAG or OpenAI is required Strong technical skills: as a Senior Data Scientist, you are expected to be able to create projects from scratch and have a deep understanding of application architecture. Clear and effective communication in English — advanced ability to discuss business tasks, justify decisions, and communicate issues. Good self-presentation is also essential for upcoming client calls. Strong self-organizational skills — ability to work full-time remotely with no supervision. Reliability — we want to trust you and expect that you won’t let us and the client down. Adaptability and Flexibility — the ability to onboard the project promptly after accepting it and start delivering results quickly. NOT YOUR TECH STACK? We have a variety of projects, so if you have 4+ years of commercial software development experience and are proficient in AI Agent Architecture, AI Automation Architecture, Site Reliability Engineering, Platform Engineering, React Python, React Golang, Golang, React Java, React Ruby, Ruby, PHP Vue, Vue Node.js, React .NET, Android iOS, iOS Swift, Flutter, Blockchain (Ethereum/Ethers.js/Wagmi/Viem/Solana), Angular Node.js, Vue .NET, Python Vue, DevOps, MLOps, Data Science, Angular PHP, Angular .NET, Symfony React, Symfony Vue, Symfony Angular, Python, Symfony JavaScript Next.js TypeScript, Data Analysis, React PHP, Data Engineering, Project Management, Product Management, QA Automation, QA Manual, Embedded Software Engineering, React Native Node, React Native React, React Native Ruby, React Native Python, WordPress, Android, Data Annotation, Angular, Python Node, React Node.js, Java Spring, Svelte Python, Svelte Node.js, Svelte TypeScript, Rust, Shopify JavaScript, Vue Nuxt, PHP Laravel, UI/UX Design, Animation, Graphic Design, React Node React Native, .NET C#, Electron, Scala, C++, Unreal Engine C++, Python LLM, Unity, or Machine Learning Engineering, we would be happy to connect with you and match you with a project that fits your experience. We work with developers from 75+ countries across Europe, Latin America, North America (the U.S. and Canada), selected countries in Asia (Japan, Singapore, South Korea, the Philippines, Indonesia, Malaysia, Vietnam, Thailand, and Israel), Oceania (Australia, New Zealand, and Papua New Guinea), and Africa (including Morocco and South Africa)."
+    },
+    {
+      "source": "Arbeitnow",
+      "title": "(Senior) QA Engineer - AI-Driven Testing (m/f/d)",
+      "company": "1KOMMA5˚",
+      "location": "Berlin",
+      "salary": "",
+      "tags": [
+        "Remote",
+        "Software Development",
+        "professional / experienced"
+      ],
+      "url": "https://www.arbeitnow.com/jobs/companies/1komma50/senior-qa-engineer-ai-driven-testing-berlin-449691",
+      "date": 1785168031,
+      "desc": "1KOMMA5° At 1KOMMA5° , we pursue a clear vision: Living on wind and sunlight forever for free . To make this a reality, we are building the energy system of the future with Heartbeat AI. Want to be part of it? We bring together regional craftsmanship and scalable software: We don't think of solar, batteries, heat pumps, and e-mobility as isolated components, but control them as an intelligent, integrated overall system in our virtual power plant. Directly connected to the electricity market – in real time, fully automated. This way, energy is used when it is available from renewables and particularly cost-effective. By 2030, our goal is to transition 1.5 million households to renewable energies. Over 3,000 people are working towards this every day, at more than 80 locations worldwide, from Finland to Australia. Want to take responsibility and build solutions that truly matter? Apply now and help us shape the energy world of tomorrow. Learn about our Product Tech team! Deine Position As part of one or two cross-functional mobile product teams, you will own the quality of our Flutter apps, and change how we approach testing. AI-driven QA is the differentiator in this role. Our QA team already uses AI for test generation, but we want to go much further. You will help invent this from scratch: autonomous exploration, smarter test orchestration, self-directed QA workflows, and QA systems that detect product risks before they reach users. This is not a \"write test cases and file tickets\" role. You co-own product quality end-to-end, tell engineering teams where the gaps are, and build the systems and practices that let us ship with confidence. Faster, not slower. You think about quality as something you design into the product and process, not a checklist you run before release. Our Stack Flutter TypeScript Appium, BrowserStack Testmo for test case management GCP, GitHub Actions, Datadog AI-assisted development with Cursor and agentic coding workflows Linear, Notion, Figma, Miro Key Responsibilities Own quality across our mobile products end-to-end: test strategy, execution, and production monitoring Work embedded in one or two cross-functional product teams and shape quality practices with engineers, product, and design Find the gaps in our current testing approach and close them Grow and maintain our automated test suite (Appium / BrowserStack). Keep it fast, stable, trusted, and focused on critical user journeys Advise engineers on testing strategy and testability early, at the design stage, not after the build Push AI-driven QA beyond test generation: bring in autonomous exploratory testing, intelligent orchestration, and self-directed testing workflows Build QA feedback loops that are tightly integrated with development. Quality should be a real-time signal, not a gate at the end Keep test infrastructure healthy: less flakiness, faster runs, results the whole team can act on Use AI tools wherever they make you and the team more effective, and figure out where autonomous QA can reduce repetitive manual work while preserving human judgment where it matters Dein Profil 5+ years of QA experience across manual testing, automation, and test strategy. Hands-on experience with mobile test automation (Appium or comparable) and cloud device farms (BrowserStack or similar) Experience integrating automated testing into CI/CD pipelines (we use GitHub Actions) and using quality signals to support rapid, reliable releases Strong understanding of mobile application architecture, client-server interactions, and API integrations, with a feel for common mobile failure patterns You understand the SDLC and can design test strategies around how complex products fail Practical experience leveraging AI in QA workflows such as exploratory testing, test case design, defect analysis, and autonomous testing agents. Or you have a clear vision for it and can show you've been building in that direction You care about user journeys and real-world scenarios, not just code coverage numbers Comfortable with ambiguity. You figure out the path forward when there's no playbook Clear communicator in written and spoken English Bonus points for: German language skills Experience with energy systems, IoT, or climate tech Startup or scale-up experience Hands-on experience with LLMs or AI agents in a QA or DevEx context Benefits You are part of an international, dynamic, and highly motivated team of people who have proven to make things happen With your work, you accelerate the \"energy transition\" and hence have a direct impact on our climate Work with and learn from other super-smart colleagues You will enjoy direct contact with core decision-makers You will enjoy the best chances of entering full-time in one of Europe’s most thriving scaleups You work remotely (Germany-wide), with offices in Hamburg, Berlin or Munich Create a healthy balance alongside your work and enjoy all the benefits of the EGYM Wellpass Benefits and discounts are yours with Futurebens Whether city bike or e-bike - be flexible with our job bike leasing and do something good for the environment at the same time Find Jobs in Germany on Arbeitnow"
+    },
+    {
+      "source": "Arbeitnow",
+      "title": "Senior QA Engineer (Financial Apps)",
+      "company": "Fireblocks",
+      "location": "Belgrade, Serbia; Berlin, Berlin, Prague, Czech Republic; United Kingdom; Warszawa, Masovian Voivodeship, Poland",
+      "salary": "",
+      "tags": [
+        "R&D"
+      ],
+      "url": "https://www.arbeitnow.com/jobs/companies/fireblocks/senior-qa-engineer-financial-apps-belgrade-serbia-berlin-berlin-prague-czech-republic-united-kingdom-warszawa-masovian-voivodeship-poland-55497",
+      "date": 1785165326,
+      "desc": "div class= content-intro p The world of digital assets is accelerating in speed, magnitude, and complexity, opening the door to new ways for leveraging the blockchain. Fireblocks’ platform and network provide the simplest and most secure way for companies to work with digital assets and it trusted by some of the largest financial institutions, banks, globally-recognized brands, and Web3 companies in the world, including BNY Mellon, BNP Paribas, ANZ Bank, Revolut, and thousands more. nbsp; /p /div p strong About Fireblocks /strong /p p nbsp;Fireblocks is the institutional standard for digital asset security and settlement. We enable banks, fintechs, and exchanges—like BNY Mellon, Revolut, and ANZ—to securely navigate the blockchain economy. Our platform and network provide the simplest and most secure way for companies to work with digital assets. /p p strong The Mission: Quality /strong /p p nbsp;The Financial Apps unit builds the critical infrastructure that connects institutions to the digital asset economy. Our products cover everything from staking and yield to on-ramps, exchange integrations, and Web3 connectivity (e.g. WalletConnect). /p p In this role, you ll manually test all flows that need validation, and contribute to building out our automation the rest of the time. We need someone who treats quality as a holistic product challenge, takes pride in rigorous manual testing, and is eager to help grow our automation—using AI to move faster at every stage. /p p strong What You ll Do /strong /p ul li strong Holistic Quality Ownership: /strong You own the quality of the product end-to-end. You don t just test against a spec; you analyze the spec, find the logical gaps, and suggest improvements to ensure a better final product. /li li strong Hands-On Manual QA: /strong You design and execute thorough manual test plans across complex financial and Web3 flows. /li li strong AI-Powered Velocity: /strong You leverage AI agents (e.g., Claude Code) to accelerate your workflow, expand coverage, and ship faster without sacrificing depth. /li li strong Deep-Dive Analysis: /strong You are comfortable digging into logs and monitoring tools (Datadog/Sentry) to understand why something broke. You aren t afraid to get your hands dirty in the backend to find the root cause. /li li strong Contribute to Automation: /strong When you re not running manual flows, you help build and maintain automation across backend APIs and frontend interfaces in a fast-paced environment. /li li strong Product Partnership: /strong You don t see yourself as just a tester. You are an engineer with a product mindset who actively works to improve the systems you are checking. /li /ul p strong Who You Are br /strong You take real pride in finding what others miss — exploratory testing and edge-case hunting genuinely excite you, and you d rather break something today than let a user break it tomorrow. You do both automation and manual testing, and treat both as core parts of the role. /p ul class= [li_ amp;]:mb-0 [li_ amp;]:mt-1 [li_ amp;]:gap-1 [ amp;:not(:last-child)_ul]:pb-1 [ amp;:not(:last-child)_ol]:pb-1 list-disc flex flex-col gap-1 pl-8 mb-3 li class= font-claude-response-body whitespace-normal break-words pl-2 3+ years in Manual QA nbsp;with hands-on automation experience across the full stack (TypeScript preferred). /li li class= font-claude-response-body whitespace-normal break-words pl-2 Solid grasp of blockchain fundamentals, the transaction lifecycle, and DeFi logic like staking and bridging. /li li class= font-claude-response-body whitespace-normal break-words pl-2 AI-native - you already use AI tools daily to move faster and cut through complex errors. /li li class= font-claude-response-body whitespace-normal break-words pl-2 Fast learner - new domains don t slow you down; you keep pace in an industry that moves at the speed of crypto. /li li class= font-claude-response-body whitespace-normal break-words pl-2 Data-driven debugger - when something breaks, logs are your first move, not your last resort. /li /ul div class= content-conclusion p em Fireblocks mission is to enable every business to easily and securely access digital assets and cryptocurrencies. In order to do that, we strongly believe nbsp;our workforce should be as diverse as our clients, and this is why we nbsp;embrace diversity and inclusion in all its forms. nbsp; /em /p h6 em a href= https://www.fireblocks.com/candidate-privacy-notice/ target= _blank Please see our candidate privacy policy here /a . /em /h6 /div Find Jobs in Germany on Arbeitnow"
     }
   ]
 }
